@@ -1,75 +1,93 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oferta e Demanda Interativo</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .controls { margin-top: 20px; display: flex; gap: 20px; }
+    .control-group { display: flex; flex-direction: column; }
+  </style>
+</head>
+<body>
+  <h2>Gráfico Interativo de Oferta e Demanda</h2>
+  <canvas id="chart"></canvas>
 
+  <div class="controls">
+    <div class="control-group">
+      <label>Deslocar Oferta</label>
+      <input type="range" id="shiftSupply" min="-5" max="5" step="0.5" value="0" />
+    </div>
+    <div class="control-group">
+      <label>Deslocar Demanda</label>
+      <input type="range" id="shiftDemand" min="-5" max="5" step="0.5" value="0" />
+    </div>
+  </div>
 
-function supply(q, shift) {
-return 1*q + shift; // Oferta: P = q + shift
-}
+  <p>Preço de equilíbrio: <span id="eqPrice"></span> | Quantidade de equilíbrio: <span id="eqQty"></span></p>
 
+  <script>
+    const ctx = document.getElementById('chart');
 
-function demand(q, shift) {
-return -1*q + 10 + shift; // Demanda: P = -q + 10 + shift
-}
+    function supply(q, shift) {
+      return 1*q + shift; // Oferta: P = q + shift
+    }
 
+    function demand(q, shift) {
+      return -1*q + 10 + shift; // Demanda: P = -q + 10 + shift
+    }
 
-function findEquilibrium(shiftS, shiftD) {
-const q = (10 + shiftD - shiftS) / 2; // resolver: q+shiftS = -q+10+shiftD
-const p = supply(q, shiftS);
-return { q, p };
-}
+    function findEquilibrium(shiftS, shiftD) {
+      const q = (10 + shiftD - shiftS) / 2; // resolver: q+shiftS = -q+10+shiftD
+      const p = supply(q, shiftS);
+      return { q, p };
+    }
 
+    let shiftS = 0, shiftD = 0;
 
-let shiftS = 0, shiftD = 0;
+    const data = {
+      labels: Array.from({ length: 11 }, (_, i) => i),
+      datasets: [
+        {
+          label: 'Demanda', borderColor: 'blue', data: [], fill: false, tension: 0
+        },
+        {
+          label: 'Oferta', borderColor: 'red', data: [], fill: false, tension: 0
+        }
+      ]
+    };
 
+    const config = {
+      type: 'line', data, options: { responsive: true, maintainAspectRatio: false }
+    };
 
-const data = {
-labels: Array.from({ length: 11 }, (_, i) => i),
-datasets: [
-{
-label: 'Demanda', borderColor: 'blue', data: [], fill: false, tension: 0
-},
-{
-label: 'Oferta', borderColor: 'red', data: [], fill: false, tension: 0
-}
-]
-};
+    const chart = new Chart(ctx, config);
 
+    function updateChart() {
+      const qValues = data.labels;
+      chart.data.datasets[0].data = qValues.map(q => demand(q, shiftD));
+      chart.data.datasets[1].data = qValues.map(q => supply(q, shiftS));
 
-const config = {
-type: 'line', data, options: { responsive: true, maintainAspectRatio: false }
-};
+      const eq = findEquilibrium(shiftS, shiftD);
+      document.getElementById('eqPrice').textContent = eq.p.toFixed(2);
+      document.getElementById('eqQty').textContent = eq.q.toFixed(2);
 
+      chart.update();
+    }
 
-const chart = new Chart(ctx, config);
+    updateChart();
 
+    document.getElementById('shiftSupply').addEventListener('input', (e) => {
+      shiftS = parseFloat(e.target.value);
+      updateChart();
+    });
 
-function updateChart() {
-const qValues = data.labels;
-chart.data.datasets[0].data = qValues.map(q => demand(q, shiftD));
-chart.data.datasets[1].data = qValues.map(q => supply(q, shiftS));
-
-
-const eq = findEquilibrium(shiftS, shiftD);
-document.getElementById('eqPrice').textContent = eq.p.toFixed(2);
-document.getElementById('eqQty').textContent = eq.q.toFixed(2);
-
-
-chart.update();
-}
-
-
-updateChart();
-
-
-document.getElementById('shiftSupply').addEventListener('input', (e) => {
-shiftS = parseFloat(e.target.value);
-updateChart();
-});
-
-
-document.getElementById('shiftDemand').addEventListener('input', (e) => {
-shiftD = parseFloat(e.target.value);
-updateChart();
-});
-</script>
+    document.getElementById('shiftDemand').addEventListener('input', (e) => {
+      shiftD = parseFloat(e.target.value);
+      updateChart();
+    });
+  </script>
 </body>
 </html>
