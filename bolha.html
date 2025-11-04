@@ -7,19 +7,24 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
+  html { min-height: 100%; }
   body {
     font-family: 'Poppins', sans-serif;
     background: radial-gradient(circle at top left, #0f172a, #020617);
     margin: 0;
     padding: 20px;
     color: #e2e8f0;
-    overflow: hidden;
+    /* Removido overflow: hidden para permitir o scroll */
+    min-height: 100vh; /* Garante que o body ocupe a altura total */
+    display: flex;
+    flex-direction: column; /* Permite que o conteúdo e o footer se separem */
   }
 
   #particles {
-    position: fixed;
+    position: absolute; /* Alterado de fixed para absolute */
     top: 0; left: 0;
-    width: 100%; height: 100%;
+    width: 100%;
+    height: 100%; /* Será ajustado via JS para cobrir o conteúdo */
     z-index: 0;
   }
 
@@ -28,18 +33,22 @@
     z-index: 1;
     max-width: 1100px;
     margin: 0 auto;
+    padding: 0; /* Removido padding vertical desnecessário aqui */
+    flex-grow: 1; /* Permite que o conteúdo ocupe o espaço restante */
   }
 
   h1 {
     margin-bottom: 6px;
     color: #38bdf8;
     font-size: 2rem;
+    text-align: center;
   }
 
   p.small {
     color: #94a3b8;
     margin-top: 0;
     margin-bottom: 20px;
+    text-align: center;
   }
 
   .controls {
@@ -48,14 +57,16 @@
     flex-wrap: wrap;
     margin-bottom: 12px;
     align-items: center;
+    justify-content: center; /* Centraliza os controles */
   }
 
   .ctrl {
     background: rgba(255,255,255,0.05);
     backdrop-filter: blur(8px);
     padding: 12px;
-    border-radius: 12px;
+    border-radius: 15px; /* Ajustado para o padrão */
     border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); /* Adicionado sombra */
     flex: 1 1 240px;
     min-width: 220px;
   }
@@ -82,6 +93,7 @@
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
+    justify-content: center; /* Centraliza os gráficos */
   }
 
   .chart-card {
@@ -97,6 +109,9 @@
   canvas {
     width: 100%!important;
     height: 320px!important;
+    background: #0f172a; /* Fundo escuro para o gráfico */
+    border-radius: 10px;
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
   }
 
   .info {
@@ -123,7 +138,7 @@
 
   .status.ok {
     background: rgba(34,197,94,0.1);
-    color: #22c55e;
+    color: #4ade80; /* Cor ajustada */
   }
 
   .status.warn {
@@ -133,7 +148,7 @@
 
   .status.bad {
     background: rgba(239,68,68,0.1);
-    color: #ef4444;
+    color: #f87171; /* Cor ajustada */
   }
 
   #resetBtn {
@@ -158,6 +173,9 @@
     color: #64748b;
     font-size: 0.9rem;
     text-align: center;
+    padding: 15px 0; /* Adicionado padding para não colar no final */
+    position: relative; /* Garante que o footer não fique por cima de tudo */
+    z-index: 1;
   }
 
   a.back {
@@ -166,6 +184,7 @@
     text-decoration: none;
     color: #94a3b8;
     transition: color 0.2s;
+    font-weight: 600;
   }
 
   a.back:hover {
@@ -250,10 +269,10 @@ const ctx2=document.getElementById('expChart').getContext('2d');
 const priceChart=new Chart(ctx1,{type:'line',data:{labels:times,datasets:[
   {label:'Preço',data:prices,borderColor:'#38bdf8',tension:0.15,borderWidth:2,fill:false,pointRadius:0},
   {label:'Valor Fundamental',data:fundamentals,borderColor:'#94a3b8',borderDash:[6,4],tension:0.1,borderWidth:1,fill:false,pointRadius:0}
-]},options:{animation:false,responsive:true,maintainAspectRatio:false,scales:{x:{title:{display:true,text:'Tempo'}},y:{title:{display:true,text:'Preço'}}}}});
+]},options:{animation:false,responsive:true,maintainAspectRatio:false,scales:{x:{title:{display:true,text:'Tempo', color: '#e2e8f0'}, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' }},y:{title:{display:true,text:'Preço', color: '#e2e8f0'}, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' }}}, plugins:{legend:{labels:{color:'#e2e8f0'}}}}});
 const expChart=new Chart(ctx2,{type:'line',data:{labels:times,datasets:[
-  {label:'Expectativas',data:exps,borderColor:'#16a34a',tension:0.2,borderWidth:2,fill:false,pointRadius:0}
-]},options:{animation:false,responsive:true,maintainAspectRatio:false,scales:{x:{title:{display:true,text:'Tempo'}},y:{title:{display:true,text:'Expectativas'}}},plugins:{legend:{display:false}}}});
+  {label:'Expectativas',data:exps,borderColor:'#4ade80',tension:0.2,borderWidth:2,fill:false,pointRadius:0} /* Cor ajustada */
+]},options:{animation:false,responsive:true,maintainAspectRatio:false,scales:{x:{title:{display:true,text:'Tempo', color: '#e2e8f0'}, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' }},y:{title:{display:true,text:'Expectativas', color: '#e2e8f0'}, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' }}},plugins:{legend:{display:false}}}});
 
 const baseNoiseFund=0.2, meanRevFund=0.02, expNoise=0.01;
 const expMeanRev=0.01, specK=0.5, bubbleTrigger=1.3, recoverySpeed=0.01;
@@ -343,7 +362,7 @@ requestAnimationFrame(step);
   const numParticles = 80;
 
   canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.height = document.body.scrollHeight;
 
   class Particle {
     constructor() {
@@ -402,11 +421,25 @@ requestAnimationFrame(step);
     requestAnimationFrame(animateParticles);
   }
 
-  window.addEventListener('resize', () => {
+  function resizeCanvas() {
+    // Calcula a altura total do conteúdo, incluindo margens e padding
+    const bodyHeight = Math.max(
+      document.body.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.clientHeight,
+      document.documentElement.scrollHeight,
+      document.documentElement.offsetHeight
+    );
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.height = bodyHeight;
     initParticles();
-  });
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('load', resizeCanvas);
+  
+  // Adiciona um pequeno delay para garantir que o conteúdo dinâmico seja carregado
+  setTimeout(resizeCanvas, 500);
 
   initParticles();
   animateParticles();
