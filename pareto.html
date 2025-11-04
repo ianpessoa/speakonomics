@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fronteira de Possibilidades de Produção (FPP)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #f4f4f9;
+    margin: 0;
+    padding: 20px;
+  }
+  #chart-container {
+    position: relative;
+    margin: auto;
+    height: 400px;
+    width: 90%;
+    max-width: 700px;
+  }
+  .slider-container {
+    margin: 15px;
+  }
+</style>
+</head>
+<body>
+  <h2>Eficiência de Pareto — Fronteira de Possibilidades de Produção</h2>
+  <p>Ajuste a produção dos dois bens e veja se está dentro, fora ou sobre a fronteira (eficiência).</p>
+
+  <div class="slider-container">
+    <label>Bem X: <span id="xValue">50</span></label><br>
+    <input type="range" id="goodX" min="0" max="100" value="50">
+  </div>
+
+  <div class="slider-container">
+    <label>Bem Y: <span id="yValue">50</span></label><br>
+    <input type="range" id="goodY" min="0" max="100" value="50">
+  </div>
+
+  <h3 id="status"></h3>
+
+  <div id="chart-container">
+    <canvas id="fppChart"></canvas>
+  </div>
+
+<script>
+let chart;
+
+function productionPossibility(x) {
+  // Exemplo simples de fronteira côncava
+  return 100 - 0.01 * Math.pow(x, 2);
+}
+
+function updateChart() {
+  const x = parseInt(document.getElementById("goodX").value);
+  const y = parseInt(document.getElementById("goodY").value);
+  document.getElementById("xValue").textContent = x;
+  document.getElementById("yValue").textContent = y;
+
+  const maxY = productionPossibility(x);
+  const status = document.getElementById("status");
+
+  if (y > maxY + 2) {
+    status.textContent = "Produção impossível (fora da fronteira)";
+    status.style.color = "red";
+  } else if (Math.abs(y - maxY) < 2) {
+    status.textContent = "Eficiência de Pareto (na fronteira)";
+    status.style.color = "green";
+  } else {
+    status.textContent = "Produção ineficiente (dentro da fronteira)";
+    status.style.color = "orange";
+  }
+
+  const data = [];
+  for (let i = 0; i <= 100; i++) {
+    data.push({ x: i, y: productionPossibility(i) });
+  }
+
+  const pointData = [{ x: x, y: y }];
+
+  // Destroi gráfico anterior antes de criar um novo
+  if (chart) chart.destroy();
+
+  const ctx = document.getElementById("fppChart").getContext("2d");
+  chart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Fronteira de Possibilidades de Produção (FPP)',
+          data: data,
+          borderColor: 'blue',
+          borderWidth: 2,
+          showLine: true,
+          fill: false,
+          pointRadius: 0
+        },
+        {
+          label: 'Ponto de Produção',
+          data: pointData,
+          backgroundColor: 'red',
+          pointRadius: 6
+        }
+      ]
+    },
+    options: {
+      animation: false,
+      scales: {
+        x: { title: { display: true, text: 'Bem X' }, min: 0, max: 100 },
+        y: { title: { display: true, text: 'Bem Y' }, min: 0, max: 100 }
+      }
+    }
+  });
+}
+
+document.getElementById("goodX").addEventListener("input", updateChart);
+document.getElementById("goodY").addEventListener("input", updateChart);
+
+// Inicializa
+updateChart();
+</script>
+</body>
+</html>
