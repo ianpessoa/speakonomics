@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Modelo Clássico: Gravitação de Preços e Lucros (com controle de velocidade)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 900px; }
+    .control-group { margin-bottom: 10px; }
+    label { display:inline-block; width: 260px; font-weight:600; }
+    input[type="range"] { width: 220px; vertical-align: middle; }
+    #chartContainer { margin-top: 20px; }
+    .small { font-size: 0.9rem; color:#333; }
+  </style>
+</head>
+<body>
+
+<h2>Modelo Clássico: Gravitação de Preços e Lucros</h2>
+
+<div class="control-group">
+  <label>Custo de Produção (constante):</label>
+  <input type="number" id="cost" value="10" step="0.1">
+</div>
+
+<div class="control-group">
+  <label>Taxa Normal/Equalizada de Lucro (%):</label>
+  <input type="range" id="avgProfitRate" min="1" max="50" value="20">
+  <span id="avgProfitRateDisplay">20%</span>
+</div>
+
+<div class="control-group">
+  <label>Demanda (quantidade):</label>
+  <input type="range" id="demand" min="10" max="500" value="200">
+  <span id="demandDisplay">200</span>
+</div>
+
+<div class="control-group">
+  <label>Taxa de Lucro de Mercado (%):</label>
+  <input type="range" id="marketProfitRate" min="1" max="80" value="20">
+  <span id="marketProfitRateDisplay">20%</span>
+</div>
+
+<div class="control-group">
+  <label>Oferta (quantidade):</label>
+  <input type="number" id="supply" value="200" readonly>
+</div>
+
+<!-- NOVO: controle de velocidade -->
+<div class="control-group">
+  <label>Velocidade do Ajuste:</label>
+  <input type="range" id="speedControl" min="0.1" max="2" value="0.5" step="0.1">
+  <span id="speedDisplay">Lento</span>
+</div>
+
+<p><b>Preço Natural:</b> R$ <span id="naturalPrice">0</span></p>
+<p><b>Preço de Mercado:</b> R$ <span id="marketPrice">0</span></p>
+<p class="small">Observação: choque = ajuste imediato quando você mexe na taxa de mercado ou demanda; depois gravitação suave.</p>
+
+<div id="chartContainer">
+  <canvas id="chart" width="900" height="360"></canvas>
+</div>
+
+<script>
+function naturalPrice(cost, avgProfitRate) { return cost * (1 + avgProfitRate); }
+function marketPrice(cost, marketProfitRate) { return cost * (1 + marketProfitRate); }
+
+let cost = 10, avgProfitRate = 0.20, demand = 200, marketProfitRate = 0.20, supply = 200;
+let lastUserMarketProfitRate = marketProfitRate;
+let lastUserDemand = demand;
+
+// PARÂMETROS BASE
+const IMMEDIATE_LIMIT = 0.9;
+const BASE_SUPPLY_SPEED = 0.05;
+const BASE_K_SUPPLY_DEVIATION = 0.02;
+const BASE_K_DELTA_SUPPLY = 0.5;
+const BASE_K_PULL_TO_NORMAL = 0.01;
+
+// NOVO
+let speedFactor = 0.5;
+
+function updateSpeedLabel(val) {
+  if (val < 0.3) return "Muito lento";
+  if (val < 0.7) return "Lento";
+  if (val < 1.2) return "Normal";
+  if (val < 1.6) return "Rápido";
+  return "Turbo";
+}
+
+const ctx = document.getElementById('chart').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: Array.from({ length: 501 }, (_, i) => i),
+    datasets: [
+      { label: "Demanda", data: [{ x:demand, y:0 }, { x:demand, y:0 }], borderWidth: 2, borderDash: [6,4], pointRadius: 0 },
+      { label: "Preço Natural", data: Array(501).fill(0), borderWidth: 2, pointRadius: 0 },
+      { label: "Preço de Mercado", data: Array(501).fill(null), borderWidth: 0, pointRadius: 8 },
+      { label: "Oferta", data: [{ x:supply, y:0 }, { x:supply, y:0 }], borderWidth: 2, borderDash: [6,4], pointRadius: 0 }
+    ]
+  },
+  options: {
+    animation: false,
+    scales: { x:{ type:'linear', min:0, max:500 }, y:{ min:0 } }
+  }
+});
+
+function syncDisplays() {
+  document.getElementById('avgProfitRateDisplay').textContent = (document.getElementById('avgProfitRate').value) + '%';
+  document.getElementById('demandDisplay').textContent = demand;
+  document.getElementById('marketProfitRateDisplay').textContent = (marketProfitRate*100).toFixed(1) + '%';
+  document.getElementById('speedDisplay').textContent = updateSpeedLabel(speedFactor);
+}
+
+function update() {
+  cost = parseFloat(document.getElementById('cost').value);
+  avgProfitRate = parseFloat(document.getElementById('avgProfitRate').value)/100;
+  let newDemand = parseFloat(document.getElementById('demand').value);
+  const userMarketProfitRate = parseFloat(document.getElementById('marketProfitRate').value)/100;
+
+  if (newDemand !== lastUserDemand) {
+    marketProfitRate += (newDemand > lastUserDemand ? 0.05 : -0.05);
+    lastUserDemand = newDemand;
+  }
+  demand = newDemand;
+
+  const userChanged = Math.abs(userMarketProfitRate - lastUserMarketProfitRate) > 1e-6;
+  if (userChanged) {
+    let profitDiff = (userMarketProfitRate - avgProfitRate) / avgProfitRate;
+    profitDiff = Math.max(-IMMEDIATE_LIMIT, Math.min(IMMEDIATE_LIMIT, profitDiff));
+    supply = demand * (1 - profitDiff);
+    supply = Math.max(1, supply);
+    lastUserMarketProfitRate = userMarketProfitRate;
+    marketProfitRate = userMarketProfitRate;
+  }
+
+  const GRADUAL_SUPPLY_SPEED = BASE_SUPPLY_SPEED * speedFactor;
+  const K_SUPPLY_DEVIATION = BASE_K_SUPPLY_DEVIATION * speedFactor;
+  const K_DELTA_SUPPLY = BASE_K_DELTA_SUPPLY * speedFactor;
+  const K_PULL_TO_NORMAL = BASE_K_PULL_TO_NORMAL * speedFactor;
+
+  const prevSupply = supply;
+  supply += GRADUAL_SUPPLY_SPEED * (demand - supply);
+  supply = Math.max(1, supply);
+
+  const delta = supply - prevSupply;
+  const deltaNorm = delta / Math.max(1, demand);
+  const diff = (supply - demand) / Math.max(1, demand);
+
+  let force = -K_SUPPLY_DEVIATION * diff;
+  force += -K_DELTA_SUPPLY * deltaNorm;
+  force += K_PULL_TO_NORMAL * (avgProfitRate - marketProfitRate);
+
+  marketProfitRate += force;
+  marketProfitRate = Math.max(0.0001, marketProfitRate);
+
+  document.getElementById('marketProfitRate').value = (marketProfitRate*100).toFixed(0);
+  document.getElementById('supply').value = supply.toFixed(2);
+
+  const nP = naturalPrice(cost, avgProfitRate);
+  const mP = marketPrice(cost, marketProfitRate);
+
+  document.getElementById('naturalPrice').textContent = nP.toFixed(2);
+  document.getElementById('marketPrice').textContent = mP.toFixed(2);
+  syncDisplays();
+
+  chart.data.datasets[0].data = [{ x:demand, y:0 }, { x:demand, y:mP*3 }];
+  chart.data.datasets[1].data = Array(501).fill(nP);
+  chart.data.datasets[2].data = Array(501).fill(null);
+  chart.data.datasets[2].data[Math.round(Math.min(500, Math.max(0, supply)))] = mP;
+  
+  // Atualização da linha de oferta
+  chart.data.datasets[3].data = [{ x:supply, y:0 }, { x:supply, y:mP*3 }];
+
+  chart.update();
+  requestAnimationFrame(update);
+}
+
+requestAnimationFrame(update);
+
+document.getElementById('speedControl').addEventListener('input', e=>{
+  speedFactor = parseFloat(e.target.value);
+  syncDisplays();
+});
+document.getElementById('avgProfitRate').addEventListener('input', syncDisplays);
+document.getElementById('demand').addEventListener('input', syncDisplays);
+document.getElementById('marketProfitRate').addEventListener('input', syncDisplays);
+</script>
+
+</body>
+</html>
