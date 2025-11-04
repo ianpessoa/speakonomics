@@ -126,7 +126,7 @@ function step(){
     // Início da bolha: expectativa alta dispara feedback
     if(expectations > bubbleTrigger && !inBubble){
       inBubble=true;
-      bubbleCap=fundamental*(2.5+Math.random()*2.0); // teto aleatório
+      bubbleCap=fundamental*(2.5+Math.random()*8.0*(liquidity**2)*expectations); // teto aleatório
     }
 
     if(inBubble){
