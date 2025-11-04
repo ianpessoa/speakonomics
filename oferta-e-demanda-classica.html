@@ -1,129 +1,141 @@
-<!-- Styled minimalist version of the price gravitation model.  
-Paste your previous functional script inside the <script> area below where indicated.
-I kept placeholders so you can easily locate it. -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Gravitação de Preços — Modelo Clássico</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-  :root {
-    --bg: #f8f9fb;
-    --card: #ffffff;
-    --text: #1b1e23;
-    --accent: #3a6ff7;
-    --subtle: #a0a7b4;
-    --radius: 14px;
-    --shadow: 0 8px 16px rgba(0,0,0,0.08);
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    padding: 0;
-    font-family: "Inter", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-  header {
-    text-align: center;
-    padding: 24px;
-  }
-  h1 {
-    margin: 0;
-    font-size: 1.9rem;
-    font-weight: 600;
-  }
-  .container {
-    max-width: 900px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 20px;
-  }
-  .card {
-    background: var(--card);
-    border-radius: var(--radius);
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: var(--shadow);
-  }
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-  }
-  label {
-    font-size: 0.9rem;
-    color: var(--subtle);
-  }
-  input, select {
-    border: 1px solid #d1d6e0;
-    border-radius: var(--radius);
-    padding: 8px 12px;
-    font-size: 0.9rem;
-    background: #fff;
-  }
-  button {
-    padding: 10px 16px;
-    border-radius: var(--radius);
-    border: none;
-    background: var(--accent);
-    color: #fff;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all .2s ease;
-  }
-  button:hover { opacity: .9; }
-  .panel {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 16px;
-    font-size: 0.9rem;
-    color: var(--subtle);
-  }
-  canvas { margin-top: 20px; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Modelo Clássico: Gravitação de Preços e Lucros</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Estilo minimalista suave -->
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --card: #ffffff;
+      --text: #222;
+      --subtext: #555;
+      --primary: #2d6cdf;
+      --primary-soft: #e4edff;
+      --border: #d9dce3;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.07);
+      --font: "Inter", Arial, sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      background: var(--card);
+      padding: 24px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 900px;
+      max-width: 95%;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-weight: 600;
+      font-size: 1.5rem;
+      text-align: center;
+    }
+
+    .control-group {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0;
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      flex: 1;
+    }
+
+    input[type="number"], input[type="range"] {
+      flex: 1;
+      margin-left: 10px;
+    }
+
+    input[type="number"] {
+      padding: 6px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    #speedDisplay, #marketProfitRateDisplay, #avgProfitRateDisplay, #demandDisplay {
+      margin-left: 10px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    canvas {
+      border-radius: var(--radius);
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .small {
+      font-size: 0.85rem;
+      color: var(--subtext);
+      text-align: center;
+      margin-bottom: 12px;
+    }
+  </style>
 </head>
 <body>
-<header>
-  <h1>Gravitação de Preços — Modelo Clássico</h1>
-</header>
-<div class="container">
-  <div class="card">
-    <div class="controls">
-      <div>
-        <label>Taxa Equalizada:</label><br>
-        <input type="number" id="targetRate" step="0.01" value="0.15">
-      </div>
-      <div>
-        <label>Velocidade de Ajuste:</label><br>
-        <select id="speed">
-          <option value="1">Rápido</option>
-          <option value="0.5">Médio</option>
-          <option value="0.2">Lento</option>
-          <option value="0.05">Muito Lento</option>
-        </select>
-      </div>
-      <div style="display:flex; gap:10px; align-items:flex-end;">
-        <button id="shockBtn">Aplicar Choque</button>
-        <button id="resetBtn" style="background:#e64e4e;">Resetar</button>
-      </div>
-    </div>
-    <div class="panel">
-      <span>Lucro Atual: <strong id="profitDisplay">-</strong></span>
-      <span>Oferta Atual: <strong id="supplyDisplay">-</strong></span>
-    </div>
-  </div>
 
-  <div class="card">
-    <canvas id="chart"></canvas>
-  </div>
+<div class="container">
+<h2>Modelo Clássico: Gravitação de Preços e Lucros</h2>
+
+<div class="control-group">
+  <label>Custo de Produção (constante):</label>
+  <input type="number" id="cost" value="10" step="0.1">
+</div>
+
+<div class="control-group">
+  <label>Taxa Normal/Equalizada de Lucro (%):</label>
+  <input type="range" id="avgProfitRate" min="1" max="50" value="20">
+  <span id="avgProfitRateDisplay">20%</span>
+</div>
+
+<div class="control-group">
+  <label>Demanda (quantidade):</label>
+  <input type="range" id="demand" min="10" max="500" value="200">
+  <span id="demandDisplay">200</span>
+</div>
+
+<div class="control-group">
+  <label>Taxa de Lucro de Mercado (%):</label>
+  <input type="range" id="marketProfitRate" min="1" max="80" value="20">
+  <span id="marketProfitRateDisplay">20%</span>
+</div>
+
+<div class="control-group">
+  <label>Oferta (quantidade):</label>
+  <input type="number" id="supply" value="200" readonly>
+</div>
+
+<div class="control-group">
+  <label>Velocidade do Ajuste:</label>
+  <input type="range" id="speedControl" min="1.2" max="2" value="0.5" step="0.1">
+  <span id="speedDisplay">Lento</span>
+</div>
+
+<p><b>Preço Natural:</b> R$ <span id="naturalPrice">0</span></p>
+<p><b>Preço de Mercado:</b> R$ <span id="marketPrice">0</span></p>
+<p class="small">Choque ao mover demanda/lucro → depois gravitação suave até o equilíbrio.</p>
+
+<canvas id="chart" width="900" height="360"></canvas>
 </div>
 
 <script>
@@ -145,10 +157,10 @@ const BASE_K_PULL_TO_NORMAL = 0.01;
 let speedFactor = 0.5;
 
 function updateSpeedLabel(val) {
-  if (val < 0.3) return "Muito lento";
-  if (val < 0.7) return "Lento";
-  if (val < 1.2) return "Normal";
-  if (val < 1.6) return "Rápido";
+  if (val < 1.2) return "Muito lento";
+  if (val < 1.4) return "Lento";
+  if (val < 1.6) return "Normal";
+  if (val < 1.8) return "Rápido";
   return "Turbo";
 }
 
@@ -258,5 +270,7 @@ document.getElementById('avgProfitRate').addEventListener('input', syncDisplays)
 document.getElementById('demand').addEventListener('input', syncDisplays);
 document.getElementById('marketProfitRate').addEventListener('input', syncDisplays);
 </script>
+
+
 </body>
 </html>
