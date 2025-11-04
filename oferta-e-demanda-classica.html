@@ -257,7 +257,7 @@ function update() {
   syncDisplays();
 
   // Atualiza gráfico
-  chart.data.datasets[0].data = [{ x:demand, y:0 }, { x:demand, y:mPW*3 }];
+  chart.data.datasets[0].data = [{ x:demand, y:0 }, { x:demand, y:mP*3 }];
   chart.data.datasets[1].data = Array(501).fill(nP);
   chart.data.datasets[2].data = Array(501).fill(null);
   chart.data.datasets[2].data[Math.round(Math.min(500, Math.max(0, supply)))] = mP;
