@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gráfico Interativo da TQM</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    padding: 20px;
+  }
+  .container {
+    max-width: 800px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  canvas {
+    margin-top: 20px;
+  }
+  label {
+    font-weight: bold;
+  }
+  input {
+    width: 100%;
+  }
+  .slider-group {
+    margin: 15px 0;
+  }
+  #priceLabel {
+    font-size: 18px;
+    margin-top: 15px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Gráfico Interativo — Teoria Quantitativa da Moeda (TQM)</h2>
+  <p>O gráfico mostra o equilíbrio entre Demanda Agregada (AD) e Oferta Agregada (AS).<br>
+  Ajuste o <b>PIB Potencial</b> e a <b>Base Monetária</b> para ver como o nível de preços muda.</p>
+
+  <div class="slider-group">
+    <label for="pib">PIB Potencial (desloca AS): <span id="pibVal">100</span></label>
+    <input type="range" id="pib" min="50" max="150" value="100" step="1">
+  </div>
+
+  <div class="slider-group">
+    <label for="moeda">Base Monetária (desloca AD): <span id="moedaVal">0</span></label>
+    <input type="range" id="moeda" min="-30" max="30" value="0" step="1">
+  </div>
+
+  <div id="priceLabel"><b>Nível de Preços:</b> <span id="nivelPreco">10.00</span></div>
+
+<canvas id="chart" height="400"></canvas>
+
+</div>
+
+<script>
+const ctx = document.getElementById('chart').getContext('2d');
+
+// parâmetros fixos da AD
+const interceptoAD = 10; // nível de preço quando PIB = shift
+const slopeAD = 0.01;    // inclinação da AD
+
+// valores iniciais
+let pibPotencial = 100;
+let baseMonetaria = 0;
+
+function calcularCurvas() {
+  const AD = [];
+  const AS = [];
+  const xVals = [];
+
+  const shiftAD = baseMonetaria; // deslocamento horizontal da AD
+
+  for (let x = 0; x <= 200; x += 1) {
+    const yAD = interceptoAD - slopeAD * (x - shiftAD);
+    AD.push({ x: x, y: yAD });
+    xVals.push(x);
+  }
+
+  // Curva de oferta vertical (AS)
+  for (let y = 0; y <= 20; y += 0.5) {
+    AS.push({ x: pibPotencial, y: y });
+  }
+
+  // Cálculo do ponto de equilíbrio (interseção)
+  const nivelPreco = interceptoAD - slopeAD * (pibPotencial - shiftAD);
+
+  return { AD, AS, nivelPreco };
+}
+
+function atualizarGrafico() {
+  const { AD, AS, nivelPreco } = calcularCurvas();
+
+  chart.data.datasets[0].data = AD;
+  chart.data.datasets[1].data = AS;
+  chart.data.datasets[2].data = [{ x: pibPotencial, y: nivelPreco }];
+
+  document.getElementById('nivelPreco').textContent = nivelPreco.toFixed(2);
+
+  chart.update();
+}
+
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    datasets: [
+      {
+        label: 'Demanda Agregada (AD)',
+        data: [],
+        borderColor: 'blue',
+        borderWidth: 2,
+        fill: false,
+      },
+      {
+        label: 'Oferta Agregada (AS)',
+        data: [],
+        borderColor: 'orange',
+        borderWidth: 2,
+        fill: false,
+      },
+      {
+        label: 'Equilíbrio',
+        data: [],
+        borderColor: 'red',
+        pointBackgroundColor: 'red',
+        pointRadius: 6,
+        type: 'scatter'
+      }
+    ]
+  },
+  options: {
+    animation: false,
+    responsive: true,
+    scales: {
+      x: {
+        type: 'linear',
+        title: {
+          display: true,
+          text: 'PIB (Y)',
+        },
+        min: 0,
+        max: 200
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Nível de Preços (P)',
+        },
+        min: 0,
+        max: 20
+      }
+    },
+    plugins: {
+      legend: { position: 'bottom' }
+    }
+  }
+});
+
+document.getElementById('pib').addEventListener('input', e => {
+  pibPotencial = parseFloat(e.target.value);
+  document.getElementById('pibVal').textContent = pibPotencial;
+  atualizarGrafico();
+});
+
+document.getElementById('moeda').addEventListener('input', e => {
+  baseMonetaria = parseFloat(e.target.value);
+  document.getElementById('moedaVal').textContent = baseMonetaria;
+  atualizarGrafico();
+});
+
+// Inicializa
+atualizarGrafico();
+</script>
+
+</body>
+</html>
