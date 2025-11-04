@@ -5,58 +5,49 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Modelo Clássico: Gravitação de Preços e Lucros</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
-  <!-- Estilo elegante com fundo animado -->
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-
-    :root {
-      --primary: #38bdf8;
-      --secondary: #16a34a;
-      --accent: #22d3ee;
-      --text: #f1f5f9;
-      --subtext: #94a3b8;
-      --card: rgba(17, 24, 39, 0.75);
-      --radius: 14px;
-      --shadow: 0 8px 24px rgba(0,0,0,0.4);
-    }
-
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at top left, #0f172a, #020617);
       margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text);
+      padding: 20px;
+      color: #e2e8f0;
       overflow-x: hidden;
-      background: linear-gradient(-45deg, #0f172a, #1e293b, #0c4a6e, #0f766e);
-      background-size: 400% 400%;
-      animation: gradientMove 18s ease infinite;
     }
 
-    @keyframes gradientMove {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    #particles {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
     }
 
-    .container {
-      background: var(--card);
-      padding: 32px;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-      width: 900px;
-      max-width: 95%;
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 900px; /* Ajustado para o container original */
+      margin: 0 auto;
     }
 
     h2 {
+      margin-bottom: 12px;
+      color: #38bdf8;
+      font-size: 2rem;
       text-align: center;
-      font-size: 1.8rem;
-      font-weight: 600;
-      margin-top: 0;
-      color: var(--primary);
+    }
+
+    .container {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(8px);
+      padding: 32px;
+      border-radius: 15px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
     }
 
     .control-group {
@@ -71,6 +62,7 @@
       font-weight: 600;
       flex: 1;
       font-size: 0.95rem;
+      color: #e0f2fe;
     }
 
     input[type="number"], input[type="range"] {
@@ -78,22 +70,25 @@
     }
 
     input[type="number"] {
-      padding: 6px;
-      border-radius: var(--radius);
+      padding: 8px;
+      border-radius: 8px;
       border: 1px solid #334155;
       background: #1e293b;
-      color: var(--text);
+      color: #e2e8f0;
       width: 100%;
+      box-sizing: border-box;
     }
 
     input[type="range"] {
       width: 100%;
-      accent-color: var(--primary);
+      accent-color: #38bdf8;
     }
 
     #speedDisplay, #marketProfitRateDisplay, #avgProfitRateDisplay, #demandDisplay {
-      font-weight: 600;
-      color: var(--accent);
+      font-weight: 700;
+      color: #38bdf8;
+      min-width: 50px; /* Para manter o alinhamento */
+      text-align: right;
     }
 
     p {
@@ -102,65 +97,88 @@
       text-align: center;
     }
 
+    p b {
+      color: #38bdf8;
+    }
+
     .small {
       font-size: 0.8rem;
-      color: var(--subtext);
+      color: #94a3b8;
       margin-bottom: 12px;
       text-align: center;
     }
 
     canvas {
       margin-top: 20px;
-      border-radius: var(--radius);
+      border-radius: 15px;
       background: #0f172a;
       box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
+    }
+
+    /* Estilo do botão Voltar */
+    a.back {
+      display: inline-block;
+      margin-bottom: 12px;
+      text-decoration: none;
+      color: #94a3b8;
+      transition: color 0.2s;
+      font-weight: 600;
+    }
+
+    a.back:hover {
+      color: #38bdf8;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>Modelo Clássico: Gravitação de Preços e Lucros</h2>
+<canvas id="particles"></canvas>
+<div class="wrap">
+  <a href="index.html" class="back">← Voltar ao início</a>
 
-  <div class="control-group">
-    <label>Custo de Produção (constante):</label>
-    <input type="number" id="cost" value="10" step="0.1">
+  <div class="container">
+    <h2>Modelo Clássico: Gravitação de Preços e Lucros</h2>
+
+    <div class="control-group">
+      <label>Custo de Produção (constante):</label>
+      <input type="number" id="cost" value="10" step="0.1">
+    </div>
+
+    <div class="control-group">
+      <label>Taxa Normal/Equalizada de Lucro (%):</label>
+      <input type="range" id="avgProfitRate" min="1" max="50" value="20">
+      <span id="avgProfitRateDisplay">20%</span>
+    </div>
+
+    <div class="control-group">
+      <label>Demanda (quantidade):</label>
+      <input type="range" id="demand" min="10" max="500" value="200">
+      <span id="demandDisplay">200</span>
+    </div>
+
+    <div class="control-group">
+      <label>Taxa de Lucro de Mercado (%):</label>
+      <input type="range" id="marketProfitRate" min="1" max="80" value="20">
+      <span id="marketProfitRateDisplay">20%</span>
+    </div>
+
+    <div class="control-group">
+      <label>Oferta (quantidade):</label>
+      <input type="number" id="supply" value="200" readonly>
+    </div>
+
+    <div class="control-group">
+      <label>Velocidade do Ajuste:</label>
+      <input type="range" id="speedControl" min="0.5" max="2" value="0.5" step="0.1">
+      <span id="speedDisplay">Lento</span>
+    </div>
+
+    <p><b>Preço Natural:</b> R$ <span id="naturalPrice">0</span></p>
+    <p><b>Preço de Mercado:</b> R$ <span id="marketPrice">0</span></p>
+    <p class="small">Choque ao mover demanda/lucro → depois gravitação suave até o equilíbrio.</p>
+
+    <canvas id="chart" width="900" height="360"></canvas>
   </div>
-
-  <div class="control-group">
-    <label>Taxa Normal/Equalizada de Lucro (%):</label>
-    <input type="range" id="avgProfitRate" min="1" max="50" value="20">
-    <span id="avgProfitRateDisplay">20%</span>
-  </div>
-
-  <div class="control-group">
-    <label>Demanda (quantidade):</label>
-    <input type="range" id="demand" min="10" max="500" value="200">
-    <span id="demandDisplay">200</span>
-  </div>
-
-  <div class="control-group">
-    <label>Taxa de Lucro de Mercado (%):</label>
-    <input type="range" id="marketProfitRate" min="1" max="80" value="20">
-    <span id="marketProfitRateDisplay">20%</span>
-  </div>
-
-  <div class="control-group">
-    <label>Oferta (quantidade):</label>
-    <input type="number" id="supply" value="200" readonly>
-  </div>
-
-  <div class="control-group">
-    <label>Velocidade do Ajuste:</label>
-    <input type="range" id="speedControl" min="0.5" max="2" value="0.5" step="0.1">
-    <span id="speedDisplay">Lento</span>
-  </div>
-
-  <p><b>Preço Natural:</b> R$ <span id="naturalPrice">0</span></p>
-  <p><b>Preço de Mercado:</b> R$ <span id="marketPrice">0</span></p>
-  <p class="small">Choque ao mover demanda/lucro → depois gravitação suave até o equilíbrio.</p>
-
-  <canvas id="chart" width="900" height="360"></canvas>
 </div>
 
 <script>
@@ -196,7 +214,7 @@ const chart = new Chart(ctx, {
       {
         label: "Demanda",
         data: [{ x: demand, y: 0 }, { x: demand, y: 0 }],
-        borderColor: '#22d3ee',
+        borderColor: '#22d3ee', /* Mantido o ciano para Demanda */
         borderDash: [6, 4],
         borderWidth: 2,
         pointRadius: 0
@@ -204,14 +222,14 @@ const chart = new Chart(ctx, {
       {
         label: "Preço Natural",
         data: Array(501).fill(0),
-        borderColor: '#94a3b8',
+        borderColor: '#94a3b8', /* Mantido o cinza para Preço Natural */
         borderWidth: 2,
         pointRadius: 0
       },
       {
         label: "Preço de Mercado",
         data: [{ x: supply, y: marketPrice(cost, marketProfitRate) }],
-        borderColor: '#38bdf8',
+        borderColor: '#38bdf8', /* Mantido o azul para Preço de Mercado */
         backgroundColor: '#38bdf8',
         pointRadius: 7,
         pointHoverRadius: 9,
@@ -220,7 +238,7 @@ const chart = new Chart(ctx, {
       {
         label: "Oferta",
         data: [{ x: supply, y: 0 }, { x: supply, y: 0 }],
-        borderColor: '#16a34a',
+        borderColor: '#16a34a', /* Mantido o verde para Oferta */
         borderDash: [6, 4],
         borderWidth: 2,
         pointRadius: 0
@@ -230,8 +248,20 @@ const chart = new Chart(ctx, {
   options: {
     animation: false,
     scales: {
-      x: { type: 'linear', min: 0, max: 500, title: { display: true, text: 'Quantidade' } },
-      y: { min: 0, title: { display: true, text: 'Preço' } }
+      x: { 
+        type: 'linear', 
+        min: 0, 
+        max: 500, 
+        title: { display: true, text: 'Quantidade', color: '#e2e8f0' },
+        ticks: { color: '#94a3b8' },
+        grid: { color: 'rgba(255,255,255,0.1)' }
+      },
+      y: { 
+        min: 0, 
+        title: { display: true, text: 'Preço', color: '#e2e8f0' },
+        ticks: { color: '#94a3b8' },
+        grid: { color: 'rgba(255,255,255,0.1)' }
+      }
     },
     plugins: {
       legend: { labels: { color: '#e2e8f0' } }
@@ -326,6 +356,83 @@ document.getElementById('speedControl').addEventListener('input', e=>{
 document.getElementById('avgProfitRate').addEventListener('input', syncDisplays);
 document.getElementById('demand').addEventListener('input', syncDisplays);
 document.getElementById('marketProfitRate').addEventListener('input', syncDisplays);
+</script>
+
+<script>
+  // fundo animado - partículas conectadas (Copiado de pasted_content_2.txt)
+  const canvas = document.getElementById('particles');
+  const ctxParticles = canvas.getContext('2d');
+  let particlesArray = [];
+  const numParticles = 80;
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  class Particle {
+    constructor() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 2;
+      this.speedX = (Math.random() - 0.5) * 0.8;
+      this.speedY = (Math.random() - 0.5) * 0.8;
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+      if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+    }
+    draw() {
+      ctxParticles.fillStyle = '#38bdf8';
+      ctxParticles.beginPath();
+      ctxParticles.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctxParticles.fill();
+    }
+  }
+
+  function connect() {
+    for (let a = 0; a < particlesArray.length; a++) {
+      for (let b = a; b < particlesArray.length; b++) {
+        let dx = particlesArray[a].x - particlesArray[b].x;
+        let dy = particlesArray[a].y - particlesArray[b].y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < 100) {
+          ctxParticles.strokeStyle = 'rgba(56,189,248,0.1)';
+          ctxParticles.lineWidth = 1;
+          ctxParticles.beginPath();
+          ctxParticles.moveTo(particlesArray[a].x, particlesArray[a].y);
+          ctxParticles.lineTo(particlesArray[b].x, particlesArray[b].y);
+          ctxParticles.stroke();
+        }
+      }
+    }
+  }
+
+  function initParticles() {
+    particlesArray = [];
+    for (let i = 0; i < numParticles; i++) {
+      particlesArray.push(new Particle());
+    }
+  }
+
+  function animateParticles() {
+    ctxParticles.clearRect(0, 0, canvas.width, canvas.height);
+    for (let particle of particlesArray) {
+      particle.update();
+      particle.draw();
+    }
+    connect();
+    requestAnimationFrame(animateParticles);
+  }
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    initParticles();
+  });
+
+  initParticles();
+  animateParticles();
 </script>
 
 </body>
