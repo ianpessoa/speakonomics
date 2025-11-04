@@ -127,7 +127,7 @@
 
 <div class="control-group">
   <label>Velocidade do Ajuste:</label>
-  <input type="range" id="speedControl" min="0.8" max="2" value="0.5" step="0.1">
+  <input type="range" id="speedControl" min="0.3" max="2" value="0.5" step="0.1">
   <span id="speedDisplay">Lento</span>
 </div>
 
@@ -157,10 +157,10 @@ const BASE_K_PULL_TO_NORMAL = 0.01;
 let speedFactor = 0.5;
 
 function updateSpeedLabel(val) {
-  if (val < 1.0) return "Muito lento";
-  if (val < 1.2) return "Lento";
-  if (val < 1.4) return "Normal";
-  if (val < 1.6) return "Rápido";
+  if (val < 0.5) return "Muito lento";
+  if (val < 0.8) return "Lento";
+  if (val < 1.1) return "Normal";
+  if (val < 1.4) return "Rápido";
   return "Turbo";
 }
 
@@ -195,9 +195,8 @@ function update() {
   let newDemand = parseFloat(document.getElementById('demand').value);
   const userMarketProfitRate = parseFloat(document.getElementById('marketProfitRate').value)/100;
 
-  // *** ajuste do choque de demanda escalado pelo speedFactor ***
+  // *** Ajuste do choque de demanda escalado pelo speedFactor ***
   if (newDemand !== lastUserDemand) {
-    // magnitude do choque proporcional à velocidade: em modo lento, choque é menor
     const baseDemandShock = 0.05;
     const shock = baseDemandShock * Math.max(0.05, speedFactor); // nunca zero
     marketProfitRate += (newDemand > lastUserDemand ? shock : -shock);
@@ -205,7 +204,7 @@ function update() {
   }
   demand = newDemand;
 
-  // choque lucro (manipulação direta do slider) — permanece imediato
+  // Choque de lucro (slider manual)
   const userChanged = Math.abs(userMarketProfitRate - lastUserMarketProfitRate) > 1e-6;
   if (userChanged) {
     let profitDiff = (userMarketProfitRate - avgProfitRate) / avgProfitRate;
@@ -217,10 +216,11 @@ function update() {
   }
 
   // /// GRAVITAÇÃO ESCALADA PELA VELOCIDADE ///
+  // Escala quadrática: respostas bem mais lentas em baixas velocidades
   const GRADUAL_SUPPLY_SPEED = BASE_SUPPLY_SPEED * speedFactor;
-  const K_SUPPLY_DEVIATION = BASE_K_SUPPLY_DEVIATION * speedFactor;
-  const K_DELTA_SUPPLY = BASE_K_DELTA_SUPPLY * speedFactor;
-  const K_PULL_TO_NORMAL = BASE_K_PULL_TO_NORMAL * speedFactor;
+  const K_SUPPLY_DEVIATION = BASE_K_SUPPLY_DEVIATION * Math.pow(speedFactor, 2);
+  const K_DELTA_SUPPLY = BASE_K_DELTA_SUPPLY * Math.pow(speedFactor, 2);
+  const K_PULL_TO_NORMAL = BASE_K_PULL_TO_NORMAL * Math.pow(speedFactor, 2);
 
   const prevSupply = supply;
   supply += GRADUAL_SUPPLY_SPEED * (demand - supply);
@@ -234,12 +234,18 @@ function update() {
   force += -K_DELTA_SUPPLY * deltaNorm;
   force += K_PULL_TO_NORMAL * (avgProfitRate - marketProfitRate);
 
+  // Aplica força gravitacional sobre a taxa de lucro
   marketProfitRate += force;
 
-  // Limitações de segurança: evitar lucro absurdo / negativo
-  marketProfitRate = Math.max(0.0001, marketProfitRate);
-  marketProfitRate = Math.min(2.0, marketProfitRate); // teto 200% para segurança
+  // Amortecimento adicional para evitar oscilações em velocidades lentas
+  const damping = 0.98 + (1 - speedFactor) * 0.015;
+  marketProfitRate = marketProfitRate * damping + (1 - damping) * avgProfitRate;
 
+  // Limites de segurança
+  marketProfitRate = Math.max(0.0001, marketProfitRate);
+  marketProfitRate = Math.min(2.0, marketProfitRate);
+
+  // Atualiza interface
   document.getElementById('marketProfitRate').value = (marketProfitRate*100).toFixed(0);
   document.getElementById('supply').value = supply.toFixed(2);
 
@@ -250,6 +256,7 @@ function update() {
   document.getElementById('marketPrice').textContent = mP.toFixed(2);
   syncDisplays();
 
+  // Atualiza gráfico
   chart.data.datasets[0].data = [{ x:demand, y:0 }, { x:demand, y:mP*3 }];
   chart.data.datasets[1].data = Array(501).fill(nP);
   chart.data.datasets[2].data = Array(501).fill(null);
