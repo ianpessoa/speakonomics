@@ -33,8 +33,9 @@
   <script>
     const ctx = document.getElementById('chart');
 
+    // Funções: agora o slider de deslocamento positivo desloca a curva PARA A DIREITA (preço menor)
     function supply(q, shift) {
-      return 1*q + shift; // Oferta: P = q + shift
+      return 1*q - shift; // Oferta: P = q - shift  (shift>0 -> desloca para a direita/para baixo)
     }
 
     function demand(q, shift) {
@@ -42,7 +43,8 @@
     }
 
     function findEquilibrium(shiftS, shiftD) {
-      const q = (10 + shiftD - shiftS) / 2; // resolver: q+shiftS = -q+10+shiftD
+      // resolver: q - shiftS = -q + 10 + shiftD  -> 2q = 10 + shiftD + shiftS
+      const q = (10 + shiftD + shiftS) / 2;
       const p = supply(q, shiftS);
       return { q, p };
     }
@@ -62,7 +64,7 @@
     };
 
     const config = {
-      type: 'line', data, options: { responsive: true, maintainAspectRatio: false }
+      type: 'line', data, options: { responsive: true, maintainAspectRatio: false, scales: { x: { title: { display: true, text: 'Quantidade' } }, y: { title: { display: true, text: 'Preço' } } } }
     };
 
     const chart = new Chart(ctx, config);
@@ -90,6 +92,6 @@
       shiftD = parseFloat(e.target.value);
       updateChart();
     });
-  </script>
+  </s
 </body>
 </html>
