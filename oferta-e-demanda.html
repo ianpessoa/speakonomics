@@ -6,44 +6,99 @@
   <title>Oferta e Demanda Interativo</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    .controls { margin-top: 20px; display: flex; gap: 20px; }
-    .control-group { display: flex; flex-direction: column; }
+    :root {
+      --bg: #f8f9fa;
+      --card: #ffffff;
+      --text: #222;
+      --accent: #4a6cf7;
+      --border: #e2e6ea;
+    }
+    body {
+      font-family: "Inter", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+      width: 420px;
+      margin-bottom: 32px;
+    }
+    canvas {
+      background: #fafafa;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 10px;
+    }
+    .controls {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+    .control-group label {
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+    }
+    input[type="range"] {
+      width: 180px;
+      cursor: pointer;
+    }
+    p {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
-  <h2>Gráfico Interativo de Oferta e Demanda</h2>
-  <div style="display:flex;justify-content:center;align-items:center;margin:40px 0;">
-  <canvas id="chart" width="350" height="350" style="border:1px solid #ccc; background:#fafafa; padding:10px; border-radius:8px;"></canvas>
-</div>
 
-  <div class="controls">
-    <div class="control-group">
-      <label>Deslocar Oferta</label>
-      <input type="range" id="shiftSupply" min="-5" max="5" step="0.5" value="0" />
-    </div>
-    <div class="control-group">
-      <label>Deslocar Demanda</label>
-      <input type="range" id="shiftDemand" min="-5" max="5" step="0.5" value="0" />
-    </div>
+  <h2>Gráfico Interativo de Oferta e Demanda</h2>
+
+  <div class="card" style="display:flex;justify-content:center;align-items:center;">
+    <canvas id="chart" width="350" height="350"></canvas>
   </div>
 
-  <p>Preço de equilíbrio: <span id="eqPrice"></span> | Quantidade de equilíbrio: <span id="eqQty"></span></p>
+  <div class="card">
+    <div class="controls">
+      <div class="control-group">
+        <label>Deslocar Oferta</label>
+        <input type="range" id="shiftSupply" min="-5" max="5" step="0.5" value="0" />
+      </div>
+      <div class="control-group">
+        <label>Deslocar Demanda</label>
+        <input type="range" id="shiftDemand" min="-5" max="5" step="0.5" value="0" />
+      </div>
+    </div>
+
+    <p>Preço de equilíbrio: <span id="eqPrice"></span> | Quantidade de equilíbrio: <span id="eqQty"></span></p>
+  </div>
 
   <script>
     const ctx = document.getElementById('chart');
 
-    // Funções: agora o slider de deslocamento positivo desloca a curva PARA A DIREITA (preço menor)
     function supply(q, shift) {
-      return 1*q - shift; // Oferta: P = q - shift  (shift>0 -> desloca para a direita/para baixo)
+      return q - shift;
     }
 
     function demand(q, shift) {
-      return -1*q + 10 + shift; // Demanda: P = -q + 10 + shift
+      return -q + 10 + shift;
     }
 
     function findEquilibrium(shiftS, shiftD) {
-      // resolver: q - shiftS = -q + 10 + shiftD  -> 2q = 10 + shiftD + shiftS
       const q = (10 + shiftD + shiftS) / 2;
       const p = supply(q, shiftS);
       return { q, p };
@@ -54,17 +109,13 @@
     const data = {
       labels: Array.from({ length: 11 }, (_, i) => i),
       datasets: [
-        {
-          label: 'Demanda', borderColor: 'blue', data: [], fill: false, tension: 0
-        },
-        {
-          label: 'Oferta', borderColor: 'red', data: [], fill: false, tension: 0
-        }
+        { label: 'Demanda', borderColor: '#4a6cf7', data: [], tension: 0, borderWidth: 2 },
+        { label: 'Oferta', borderColor: '#d64545', data: [], tension: 0, borderWidth: 2 }
       ]
     };
 
     const config = {
-      type: 'line', data, options: { responsive: true, maintainAspectRatio: false, scales: { x: { title: { display: true, text: 'Quantidade' } }, y: { title: { display: true, text: 'Preço' } } } }
+      type: 'line', data, options: { responsive: false, scales: { x: { title: { display: true, text: 'Quantidade' } }, y: { title: { display: true, text: 'Preço' } } } }
     };
 
     const chart = new Chart(ctx, config);
@@ -83,12 +134,12 @@
 
     updateChart();
 
-    document.getElementById('shiftSupply').addEventListener('input', (e) => {
+    document.getElementById('shiftSupply').addEventListener('input', e => {
       shiftS = parseFloat(e.target.value);
       updateChart();
     });
 
-    document.getElementById('shiftDemand').addEventListener('input', (e) => {
+    document.getElementById('shiftDemand').addEventListener('input', e => {
       shiftD = parseFloat(e.target.value);
       updateChart();
     });
