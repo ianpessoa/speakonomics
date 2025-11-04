@@ -1,34 +1,182 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Simulador — Bolha de Ativos</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  body{font-family:Inter,Arial,sans-serif;background:#f5f7fa;margin:0;padding:20px;color:#111827}
-  .wrap{max-width:1100px;margin:0 auto}
-  h1{margin-bottom:6px}
-  p.small{color:#6b7280;margin-top:0;margin-bottom:14px}
-  .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
-  .ctrl{background:#fff;padding:10px;border-radius:10px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
-  label{display:block;font-weight:700;margin-bottom:6px;font-size:0.95rem}
-  .value{font-weight:800;color:#2563eb}
-  input[type=range]{width:220px}
-  #charts{display:flex;gap:12px;flex-wrap:wrap}
-  .chart-card{background:#fff;padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(2,6,23,0.06);flex:1 1 540px;min-width:320px}
-  canvas{width:100%!important;height:320px!important}
-  .info{display:flex;gap:12px;align-items:center;margin-top:10px;flex-wrap:wrap}
-  .badge{background:#eef6ff;padding:8px 12px;border-radius:10px;font-weight:700;color:#1f6feb}
-  .status{padding:8px 12px;border-radius:10px}
-  .status.ok{background:#ecfdf5;color:#059669}
-  .status.warn{background:#fff7ed;color:#b45309}
-  .status.bad{background:#fef2f2;color:#b91c1c}
-  footer{margin-top:14px;color:#8b95a6;font-size:0.85rem}
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: radial-gradient(circle at top left, #0f172a, #020617);
+    margin: 0;
+    padding: 20px;
+    color: #e2e8f0;
+    overflow: hidden;
+  }
+
+  #particles {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    margin-bottom: 6px;
+    color: #38bdf8;
+    font-size: 2rem;
+  }
+
+  p.small {
+    color: #94a3b8;
+    margin-top: 0;
+    margin-bottom: 20px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    align-items: center;
+  }
+
+  .ctrl {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(8px);
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    flex: 1 1 240px;
+    min-width: 220px;
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+    color: #e0f2fe;
+  }
+
+  .value {
+    font-weight: 700;
+    color: #38bdf8;
+  }
+
+  input[type=range] {
+    width: 100%;
+    accent-color: #38bdf8;
+  }
+
+  #charts {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .chart-card {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 15px;
+    padding: 14px;
+    flex: 1 1 540px;
+    min-width: 320px;
+  }
+
+  canvas {
+    width: 100%!important;
+    height: 320px!important;
+  }
+
+  .info {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    background: rgba(56,189,248,0.1);
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #38bdf8;
+  }
+
+  .status {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+
+  .status.ok {
+    background: rgba(34,197,94,0.1);
+    color: #22c55e;
+  }
+
+  .status.warn {
+    background: rgba(251,191,36,0.1);
+    color: #facc15;
+  }
+
+  .status.bad {
+    background: rgba(239,68,68,0.1);
+    color: #ef4444;
+  }
+
+  #resetBtn {
+    margin-left: auto;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    background: #38bdf8;
+    color: #0f172a;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  #resetBtn:hover {
+    background: #0ea5e9;
+    box-shadow: 0 0 15px rgba(56,189,248,0.4);
+  }
+
+  footer {
+    margin-top: 20px;
+    color: #64748b;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  a.back {
+    display: inline-block;
+    margin-bottom: 12px;
+    text-decoration: none;
+    color: #94a3b8;
+    transition: color 0.2s;
+  }
+
+  a.back:hover {
+    color: #38bdf8;
+  }
 </style>
 </head>
 <body>
+<canvas id="particles"></canvas>
 <div class="wrap">
+  <a href="index.html" class="back">← Voltar ao início</a>
   <h1>Simulador — Bolha de Ativos</h1>
   <p class="small">Ajuste a <strong>liquidez</strong> e o <strong>choque de expectativas</strong> e observe a formação e o estouro de bolhas. O modelo mostra retroalimentação preço–expectativa e comportamento de manada.</p>
 
@@ -43,7 +191,7 @@
       <label>Expectativas (choque exógeno)</label>
       <input id="expSlider" type="range" min="0.6" max="2.5" step="0.01" value="1.10">
       <div>Valor: <span id="expVal" class="value">1.10</span></div>
-      <div style="font-size:12px;color:#7b8794;margin-top:6px">Mudar aqui aplica um choque temporário.</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:6px">Mudar aqui aplica um choque temporário.</div>
     </div>
 
     <div class="ctrl">
@@ -52,7 +200,7 @@
       <div>Coeficiente k: <span id="shockKVal" class="value">0.02</span></div>
     </div>
 
-    <button id="resetBtn" style="margin-left:auto;padding:8px 12px;border-radius:8px;border:0;background:#1f6feb;color:#fff;font-weight:700;cursor:pointer">Reset</button>
+    <button id="resetBtn">Reset</button>
   </div>
 
   <div id="charts">
@@ -100,8 +248,8 @@ const randn=s=>Math.sqrt(-2*Math.log(Math.random()))*Math.cos(2*Math.PI*Math.ran
 const ctx1=document.getElementById('priceChart').getContext('2d');
 const ctx2=document.getElementById('expChart').getContext('2d');
 const priceChart=new Chart(ctx1,{type:'line',data:{labels:times,datasets:[
-  {label:'Preço',data:prices,borderColor:'#2563eb',tension:0.15,borderWidth:2,fill:false,pointRadius:0},
-  {label:'Valor Fundamental',data:fundamentals,borderColor:'#9aa6b8',borderDash:[6,4],tension:0.1,borderWidth:1,fill:false,pointRadius:0}
+  {label:'Preço',data:prices,borderColor:'#38bdf8',tension:0.15,borderWidth:2,fill:false,pointRadius:0},
+  {label:'Valor Fundamental',data:fundamentals,borderColor:'#94a3b8',borderDash:[6,4],tension:0.1,borderWidth:1,fill:false,pointRadius:0}
 ]},options:{animation:false,responsive:true,maintainAspectRatio:false,scales:{x:{title:{display:true,text:'Tempo'}},y:{title:{display:true,text:'Preço'}}}}});
 const expChart=new Chart(ctx2,{type:'line',data:{labels:times,datasets:[
   {label:'Expectativas',data:exps,borderColor:'#16a34a',tension:0.2,borderWidth:2,fill:false,pointRadius:0}
@@ -123,26 +271,23 @@ function step(){
   if(!busted){
     let growth=specK*(expectations-1)*0.01*liquidity + 0.02*(fundamental-price)/price + randn(0.001)*liquidity;
 
-    // Início da bolha: expectativa alta dispara feedback
     if(expectations > bubbleTrigger && !inBubble){
       inBubble=true;
-      bubbleCap=fundamental*(2.5+Math.random()*8.0*(liquidity**2)*expectations); // teto aleatório
+      bubbleCap=fundamental*(2.5+Math.random()*8.0*(liquidity**2)*expectations);
     }
 
     if(inBubble){
-      // feedback acelerado
       growth += 0.02*(expectations-1)*liquidity;
-      expectations += 0.01*(price/fundamental - 1); // preço alto alimenta expectativas
+      expectations += 0.01*(price/fundamental - 1);
       if(price>=bubbleCap){
         busted=true; inBubble=false;
-        price=Math.max(1,fundamental*0.6*(0.7+Math.random()*0.3)); // queda forte
+        price=Math.max(1,fundamental*0.6*(0.7+Math.random()*0.3));
         expectations=Math.max(0.5,expectations*0.5);
       } else {
         price*=(1+growth);
       }
     } else price*=(1+growth);
   } else {
-    // fase pós-estouro
     price+=(fundamental-price)*recoverySpeed;
     expectations+=(1-expectations)*recoverySpeed*0.5;
     if(Math.abs(price-fundamental)<2 && Math.abs(expectations-1)<0.05){busted=false;}
@@ -188,6 +333,83 @@ resetBtn.addEventListener('click',()=>{
 });
 
 requestAnimationFrame(step);
+</script>
+
+<script>
+  // fundo animado - partículas conectadas
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let particlesArray = [];
+  const numParticles = 80;
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  class Particle {
+    constructor() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 2;
+      this.speedX = (Math.random() - 0.5) * 0.8;
+      this.speedY = (Math.random() - 0.5) * 0.8;
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+      if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+    }
+    draw() {
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function connect() {
+    for (let a = 0; a < particlesArray.length; a++) {
+      for (let b = a; b < particlesArray.length; b++) {
+        let dx = particlesArray[a].x - particlesArray[b].x;
+        let dy = particlesArray[a].y - particlesArray[b].y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < 100) {
+          ctx.strokeStyle = 'rgba(56,189,248,0.1)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+          ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function initParticles() {
+    particlesArray = [];
+    for (let i = 0; i < numParticles; i++) {
+      particlesArray.push(new Particle());
+    }
+  }
+
+  function animateParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let particle of particlesArray) {
+      particle.update();
+      particle.draw();
+    }
+    connect();
+    requestAnimationFrame(animateParticles);
+  }
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    initParticles();
+  });
+
+  initParticles();
+  animateParticles();
 </script>
 </body>
 </html>
