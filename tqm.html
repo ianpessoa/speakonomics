@@ -1,65 +1,160 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gráfico Interativo da TQM</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
   body {
-    font-family: Arial, sans-serif;
-    background-color: #f8f9fa;
+    font-family: 'Poppins', sans-serif;
+    background: radial-gradient(circle at top left, #0f172a, #020617);
+    margin: 0;
     padding: 20px;
+    color: #e2e8f0;
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
+
+  #particles {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
   .container {
     max-width: 800px;
     margin: auto;
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  }
-  canvas {
-    margin-top: 20px;
-  }
-  label {
-    font-weight: bold;
-  }
-  input {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    padding: 30px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     width: 100%;
   }
+
+  h2 {
+    text-align: center;
+    color: #38bdf8;
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+
+  p {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+
+  p b {
+    color: #38bdf8;
+  }
+
+  canvas {
+    margin-top: 20px;
+    background: #0f172a;
+    border-radius: 15px;
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
+    /* Ajuste para o gráfico ser menor e responsivo */
+    max-height: 350px; 
+    width: 100% !important;
+  }
+
+  label {
+    font-weight: 600;
+    color: #e0f2fe;
+    display: block;
+    margin-bottom: 8px;
+  }
+
   .slider-group {
     margin: 15px 0;
   }
+
+  .slider-group span {
+    font-weight: 700;
+    color: #38bdf8;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: #38bdf8;
+  }
+
   #priceLabel {
-    font-size: 18px;
+    font-size: 1.2rem;
     margin-top: 15px;
     text-align: center;
+    font-weight: 600;
+    color: #e2e8f0;
+  }
+
+  #nivelPreco {
+    font-weight: 700;
+    color: #4ade80; /* Cor para destaque de resultado */
+  }
+
+  /* Estilo do botão Voltar */
+  a.back {
+    display: inline-block;
+    margin-bottom: 12px;
+    text-decoration: none;
+    color: #94a3b8;
+    transition: color 0.2s;
+    font-weight: 600;
+    align-self: flex-start;
+  }
+
+  a.back:hover {
+    color: #38bdf8;
   }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>Gráfico Interativo — Teoria Quantitativa da Moeda (TQM)</h2>
-  <p>O gráfico mostra o equilíbrio entre Demanda Agregada (AD) e Oferta Agregada (AS).<br>
-  Ajuste o <b>PIB Potencial</b> e a <b>Base Monetária</b> para ver como o nível de preços muda.</p>
+<canvas id="particles"></canvas>
+<div class="wrap">
+  <a href="index.html" class="back">← Voltar ao início</a>
 
-  <div class="slider-group">
-    <label for="pib">PIB Potencial (desloca AS): <span id="pibVal">100</span></label>
-    <input type="range" id="pib" min="50" max="150" value="100" step="1">
+  <div class="container">
+    <h2>Gráfico Interativo — Teoria Quantitativa da Moeda (TQM)</h2>
+    <p>O gráfico mostra o equilíbrio entre Demanda Agregada (AD) e Oferta Agregada (AS).<br>
+    Ajuste o <b>PIB Potencial</b> e a <b>Base Monetária</b> para ver como o nível de preços muda.</p>
+
+    <div class="slider-group">
+      <label for="pib">PIB Potencial (desloca AS): <span id="pibVal">100</span></label>
+      <input type="range" id="pib" min="50" max="150" value="100" step="1">
+    </div>
+
+    <div class="slider-group">
+      <label for="moeda">Base Monetária (desloca AD): <span id="moedaVal">0</span></label>
+      <input type="range" id="moeda" min="-30" max="30" value="0" step="1">
+    </div>
+
+    <div id="priceLabel"><b>Nível de Preços:</b> <span id="nivelPreco">10.00</span></div>
+
+    <canvas id="chart" height="350"></canvas>
+
   </div>
-
-  <div class="slider-group">
-    <label for="moeda">Base Monetária (desloca AD): <span id="moedaVal">0</span></label>
-    <input type="range" id="moeda" min="-30" max="30" value="0" step="1">
-  </div>
-
-  <div id="priceLabel"><b>Nível de Preços:</b> <span id="nivelPreco">10.00</span></div>
-
-<canvas id="chart" height="400"></canvas>
-
 </div>
 
 <script>
@@ -67,7 +162,7 @@ const ctx = document.getElementById('chart').getContext('2d');
 
 // parâmetros fixos da AD
 const interceptoAD = 10; // nível de preço quando PIB = shift
-const slopeAD = 0.01;    // inclinação da AD
+const slopeAD = 0.05;    // inclinação da AD (Ajustado para ser menos horizontal)
 
 // valores iniciais
 let pibPotencial = 100;
@@ -116,22 +211,24 @@ const chart = new Chart(ctx, {
       {
         label: 'Demanda Agregada (AD)',
         data: [],
-        borderColor: 'blue',
+        borderColor: '#38bdf8', /* Cor alterada para o padrão */
         borderWidth: 2,
         fill: false,
+        pointRadius: 0
       },
       {
         label: 'Oferta Agregada (AS)',
         data: [],
-        borderColor: 'orange',
+        borderColor: '#facc15', /* Cor alterada para o padrão */
         borderWidth: 2,
         fill: false,
+        pointRadius: 0
       },
       {
         label: 'Equilíbrio',
         data: [],
-        borderColor: 'red',
-        pointBackgroundColor: 'red',
+        borderColor: '#4ade80', /* Cor alterada para o padrão */
+        pointBackgroundColor: '#4ade80',
         pointRadius: 6,
         type: 'scatter'
       }
@@ -140,27 +237,37 @@ const chart = new Chart(ctx, {
   options: {
     animation: false,
     responsive: true,
+    maintainAspectRatio: false, /* Adicionado para melhor controle de tamanho */
     scales: {
       x: {
         type: 'linear',
         title: {
           display: true,
           text: 'PIB (Y)',
+          color: '#e2e8f0'
         },
         min: 0,
-        max: 200
+        max: 200,
+        ticks: { color: '#94a3b8' },
+        grid: { color: 'rgba(255,255,255,0.1)' }
       },
       y: {
         title: {
           display: true,
           text: 'Nível de Preços (P)',
+          color: '#e2e8f0'
         },
         min: 0,
-        max: 20
+        max: 20,
+        ticks: { color: '#94a3b8' },
+        grid: { color: 'rgba(255,255,255,0.1)' }
       }
     },
     plugins: {
-      legend: { position: 'bottom' }
+      legend: { 
+        position: 'bottom',
+        labels: { color: '#e2e8f0' }
+      }
     }
   }
 });
@@ -181,5 +288,81 @@ document.getElementById('moeda').addEventListener('input', e => {
 atualizarGrafico();
 </script>
 
+<script>
+  // fundo animado - partículas conectadas (Copiado de pasted_content_2.txt)
+  const canvas = document.getElementById('particles');
+  const ctxParticles = canvas.getContext('2d');
+  let particlesArray = [];
+  const numParticles = 80;
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  class Particle {
+    constructor() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 2;
+      this.speedX = (Math.random() - 0.5) * 0.8;
+      this.speedY = (Math.random() - 0.5) * 0.8;
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+      if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+    }
+    draw() {
+      ctxParticles.fillStyle = '#38bdf8';
+      ctxParticles.beginPath();
+      ctxParticles.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctxParticles.fill();
+    }
+  }
+
+  function connect() {
+    for (let a = 0; a < particlesArray.length; a++) {
+      for (let b = a; b < particlesArray.length; b++) {
+        let dx = particlesArray[a].x - particlesArray[b].x;
+        let dy = particlesArray[a].y - particlesArray[b].y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < 100) {
+          ctxParticles.strokeStyle = 'rgba(56,189,248,0.1)';
+          ctxParticles.lineWidth = 1;
+          ctxParticles.beginPath();
+          ctxParticles.moveTo(particlesArray[a].x, particlesArray[a].y);
+          ctxParticles.lineTo(particlesArray[b].x, particlesArray[b].y);
+          ctxParticles.stroke();
+        }
+      }
+    }
+  }
+
+  function initParticles() {
+    particlesArray = [];
+    for (let i = 0; i < numParticles; i++) {
+      particlesArray.push(new Particle());
+    }
+  }
+
+  function animateParticles() {
+    ctxParticles.clearRect(0, 0, canvas.width, canvas.height);
+    for (let particle of particlesArray) {
+      particle.update();
+      particle.draw();
+    }
+    connect();
+    requestAnimationFrame(animateParticles);
+  }
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    initParticles();
+  });
+
+  initParticles();
+  animateParticles();
+</script>
 </body>
 </html>
