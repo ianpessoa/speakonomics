@@ -10,8 +10,11 @@
       margin: 0;
       font-family: 'Poppins', sans-serif;
       background: radial-gradient(circle at top left, #0f172a, #020617);
-      overflow: hidden;
+      /* Removido overflow: hidden para permitir o scroll */
       color: #e5e7eb;
+      min-height: 100vh; /* Garante que o body ocupe a altura total */
+      display: flex;
+      flex-direction: column;
     }
 
     /* Canvas animado */
@@ -26,7 +29,10 @@
       position: relative;
       z-index: 1;
       text-align: center;
-      padding-top: 5rem;
+      padding: 5rem 20px 80px 20px; /* Adicionado padding-bottom para o rodapé */
+      flex-grow: 1; /* Permite que o conteúdo ocupe o espaço restante */
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
     h1 {
@@ -61,6 +67,11 @@
       cursor: pointer;
       color: #e2e8f0;
       text-decoration: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
 
     .card:hover {
@@ -70,18 +81,39 @@
     }
 
     footer {
-      position: absolute;
-      bottom: 15px;
+      /* Removido position: absolute para que o footer flua normalmente */
       width: 100%;
       text-align: center;
       font-size: 0.85rem;
       color: #64748b;
+      padding: 15px 0; /* Adicionado padding para não colar no final */
+      margin-top: auto; /* Empurra o footer para o final do flex container */
+      position: relative; /* Garante que o footer não fique por cima de tudo */
+      z-index: 1;
+    }
+
+    /* Estilo do botão Voltar (adicionado para manter o padrão, embora não seja usado nesta página) */
+    a.back {
+      display: inline-block;
+      margin-bottom: 12px;
+      text-decoration: none;
+      color: #94a3b8;
+      transition: color 0.2s;
+      font-weight: 600;
+      align-self: flex-start;
+    }
+
+    a.back:hover {
+      color: #38bdf8;
     }
   </style>
 </head>
 <body>
   <canvas id="particles"></canvas>
   <div class="content">
+    <!-- O botão "Voltar ao início" não é necessário na página inicial, mas o estilo está pronto -->
+    <!-- <a href="index.html" class="back">← Voltar ao início</a> -->
+
     <h1>Laboratório Interativo de Economia</h1>
     <p>Explore modelos econômicos de forma visual, dinâmica e didática.</p>
 
