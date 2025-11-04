@@ -108,7 +108,7 @@ const chart = new Chart(ctx, {
 function syncDisplays() {
   document.getElementById('avgProfitRateDisplay').textContent = (document.getElementById('avgProfitRate').value) + '%';
   document.getElementById('demandDisplay').textContent = demand;
-  document.getElementById('marketProfitRateDisplay').textContent = (marketProfitRate*100).toFixed(1) + '%';
+  document.getElementById('marketProfitRateDisplay').textContent = (marketProfitRate*100).toFixed(2) + '%';
   document.getElementById('speedDisplay').textContent = updateSpeedLabel(speedFactor);
 }
 
@@ -118,12 +118,17 @@ function update() {
   let newDemand = parseFloat(document.getElementById('demand').value);
   const userMarketProfitRate = parseFloat(document.getElementById('marketProfitRate').value)/100;
 
+  // *** ajuste do choque de demanda escalado pelo speedFactor ***
   if (newDemand !== lastUserDemand) {
-    marketProfitRate += (newDemand > lastUserDemand ? 0.05 : -0.05);
+    // magnitude do choque proporcional à velocidade: em modo lento, choque é menor
+    const baseDemandShock = 0.05;
+    const shock = baseDemandShock * Math.max(0.05, speedFactor); // nunca zero
+    marketProfitRate += (newDemand > lastUserDemand ? shock : -shock);
     lastUserDemand = newDemand;
   }
   demand = newDemand;
 
+  // choque lucro (manipulação direta do slider) — permanece imediato
   const userChanged = Math.abs(userMarketProfitRate - lastUserMarketProfitRate) > 1e-6;
   if (userChanged) {
     let profitDiff = (userMarketProfitRate - avgProfitRate) / avgProfitRate;
@@ -134,6 +139,7 @@ function update() {
     marketProfitRate = userMarketProfitRate;
   }
 
+  // /// GRAVITAÇÃO ESCALADA PELA VELOCIDADE ///
   const GRADUAL_SUPPLY_SPEED = BASE_SUPPLY_SPEED * speedFactor;
   const K_SUPPLY_DEVIATION = BASE_K_SUPPLY_DEVIATION * speedFactor;
   const K_DELTA_SUPPLY = BASE_K_DELTA_SUPPLY * speedFactor;
@@ -152,7 +158,10 @@ function update() {
   force += K_PULL_TO_NORMAL * (avgProfitRate - marketProfitRate);
 
   marketProfitRate += force;
+
+  // Limitações de segurança: evitar lucro absurdo / negativo
   marketProfitRate = Math.max(0.0001, marketProfitRate);
+  marketProfitRate = Math.min(2.0, marketProfitRate); // teto 200% para segurança
 
   document.getElementById('marketProfitRate').value = (marketProfitRate*100).toFixed(0);
   document.getElementById('supply').value = supply.toFixed(2);
@@ -168,8 +177,6 @@ function update() {
   chart.data.datasets[1].data = Array(501).fill(nP);
   chart.data.datasets[2].data = Array(501).fill(null);
   chart.data.datasets[2].data[Math.round(Math.min(500, Math.max(0, supply)))] = mP;
-  
-  // Atualização da linha de oferta
   chart.data.datasets[3].data = [{ x:supply, y:0 }, { x:supply, y:mP*3 }];
 
   chart.update();
