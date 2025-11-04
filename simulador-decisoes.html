@@ -39,6 +39,19 @@
       align-items: center;
     }
 
+    /* Container principal para o conteúdo, com borda e centralizado */
+    .main-container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      width: 100%;
+      max-width: 800px; /* Largura máxima definida */
+      margin: 0 auto; /* Centraliza o container */
+    }
+
     h1 {
       text-align: center;
       color: #38bdf8;
@@ -104,6 +117,7 @@
       margin-bottom: 20px;
       width: 640px;
       max-width: 90%;
+      margin: 0 auto 20px auto; /* Centraliza o results */
     }
 
     .results p {
@@ -147,32 +161,34 @@
   <div class="wrap">
     <a href="index.html" class="back">← Voltar ao início</a>
 
-    <h1>🎯 Simulador de Decisões Econômicas</h1>
-    <p>Você possui R$ <b id="orcamento">1000</b> para distribuir entre lazer, educação e alimentação.</p>
+    <div class="main-container">
+      <h1>🎯 Simulador de Decisões Econômicas</h1>
+      <p>Você possui R$ <b id="orcamento">1000</b> para distribuir entre lazer, educação e alimentação.</p>
 
-    <div class="controls">
-      <div class="slider">
-        <label>Lazer (R$): <span id="lazerVal">0</span></label>
-        <input type="range" id="lazer" min="0" max="500" step="10" value="0">
+      <div class="controls">
+        <div class="slider">
+          <label>Lazer (R$): <span id="lazerVal">0</span></label>
+          <input type="range" id="lazer" min="0" max="500" step="10" value="0">
+        </div>
+
+        <div class="slider">
+          <label>Educação (R$): <span id="educacaoVal">0</span></label>
+          <input type="range" id="educacao" min="0" max="500" step="10" value="0">
+        </div>
+
+        <div class="slider">
+          <label>Alimentação (R$): <span id="alimentacaoVal">0</span></label>
+          <input type="range" id="alimentacao" min="0" max="500" step="10" value="0">
+        </div>
       </div>
 
-      <div class="slider">
-        <label>Educação (R$): <span id="educacaoVal">0</span></label>
-        <input type="range" id="educacao" min="0" max="500" step="10" value="0">
+      <div class="results">
+        <p>💰 Dinheiro restante: R$ <span id="dinheiroRestante">1000</span></p>
+        <p>📉 Custo de oportunidade (em % do orçamento): <span id="custoOportunidade">0</span>%</p>
       </div>
 
-      <div class="slider">
-        <label>Alimentação (R$): <span id="alimentacaoVal">0</span></label>
-        <input type="range" id="alimentacao" min="0" max="500" step="10" value="0">
-      </div>
+      <canvas id="grafico"></canvas>
     </div>
-
-    <div class="results">
-      <p>💰 Dinheiro restante: R$ <span id="dinheiroRestante">1000</span></p>
-      <p>📉 Custo de oportunidade (em % do orçamento): <span id="custoOportunidade">0</span>%</p>
-    </div>
-
-    <canvas id="grafico"></canvas>
   </div>
 
   <script>
