@@ -6,136 +6,161 @@
   <title>Modelo Clássico: Gravitação de Preços e Lucros</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Estilo minimalista suave -->
+  <!-- Estilo elegante com fundo animado -->
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
     :root {
-      --bg: #f7f8fa;
-      --card: #ffffff;
-      --text: #222;
-      --subtext: #555;
-      --primary: #2d6cdf;
-      --primary-soft: #e4edff;
-      --border: #d9dce3;
-      --radius: 12px;
-      --shadow: 0 4px 12px rgba(0,0,0,0.07);
-      --font: "Inter", Arial, sans-serif;
+      --primary: #38bdf8;
+      --secondary: #16a34a;
+      --accent: #22d3ee;
+      --text: #f1f5f9;
+      --subtext: #94a3b8;
+      --card: rgba(17, 24, 39, 0.75);
+      --radius: 14px;
+      --shadow: 0 8px 24px rgba(0,0,0,0.4);
     }
 
     body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
+      font-family: 'Inter', sans-serif;
       margin: 0;
-      padding: 30px;
+      min-height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
+      justify-content: center;
+      color: var(--text);
+      overflow-x: hidden;
+      background: linear-gradient(-45deg, #0f172a, #1e293b, #0c4a6e, #0f766e);
+      background-size: 400% 400%;
+      animation: gradientMove 18s ease infinite;
+    }
+
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     .container {
       background: var(--card);
-      padding: 24px;
+      padding: 32px;
       border-radius: var(--radius);
       box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
       width: 900px;
       max-width: 95%;
     }
 
     h2 {
-      margin-top: 0;
-      font-weight: 600;
-      font-size: 1.5rem;
       text-align: center;
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-top: 0;
+      color: var(--primary);
     }
 
     .control-group {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin: 12px 0;
+      margin: 10px 0;
+      gap: 12px;
     }
 
     label {
       font-weight: 600;
-      font-size: 0.95rem;
       flex: 1;
+      font-size: 0.95rem;
     }
 
     input[type="number"], input[type="range"] {
       flex: 1;
-      margin-left: 10px;
     }
 
     input[type="number"] {
       padding: 6px;
-      border: 1px solid var(--border);
       border-radius: var(--radius);
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: var(--text);
+      width: 100%;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary);
     }
 
     #speedDisplay, #marketProfitRateDisplay, #avgProfitRateDisplay, #demandDisplay {
-      margin-left: 10px;
       font-weight: 600;
-      color: var(--primary);
+      color: var(--accent);
     }
 
-    canvas {
-      border-radius: var(--radius);
-      background: #fff;
-      box-shadow: var(--shadow);
+    p {
+      margin: 6px 0;
+      font-size: 0.95rem;
+      text-align: center;
     }
 
     .small {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--subtext);
-      text-align: center;
       margin-bottom: 12px;
+      text-align: center;
+    }
+
+    canvas {
+      margin-top: 20px;
+      border-radius: var(--radius);
+      background: #0f172a;
+      box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-<h2>Modelo Clássico: Gravitação de Preços e Lucros</h2>
+  <h2>Modelo Clássico: Gravitação de Preços e Lucros</h2>
 
-<div class="control-group">
-  <label>Custo de Produção (constante):</label>
-  <input type="number" id="cost" value="10" step="0.1">
-</div>
+  <div class="control-group">
+    <label>Custo de Produção (constante):</label>
+    <input type="number" id="cost" value="10" step="0.1">
+  </div>
 
-<div class="control-group">
-  <label>Taxa Normal/Equalizada de Lucro (%):</label>
-  <input type="range" id="avgProfitRate" min="1" max="50" value="20">
-  <span id="avgProfitRateDisplay">20%</span>
-</div>
+  <div class="control-group">
+    <label>Taxa Normal/Equalizada de Lucro (%):</label>
+    <input type="range" id="avgProfitRate" min="1" max="50" value="20">
+    <span id="avgProfitRateDisplay">20%</span>
+  </div>
 
-<div class="control-group">
-  <label>Demanda (quantidade):</label>
-  <input type="range" id="demand" min="10" max="500" value="200">
-  <span id="demandDisplay">200</span>
-</div>
+  <div class="control-group">
+    <label>Demanda (quantidade):</label>
+    <input type="range" id="demand" min="10" max="500" value="200">
+    <span id="demandDisplay">200</span>
+  </div>
 
-<div class="control-group">
-  <label>Taxa de Lucro de Mercado (%):</label>
-  <input type="range" id="marketProfitRate" min="1" max="80" value="20">
-  <span id="marketProfitRateDisplay">20%</span>
-</div>
+  <div class="control-group">
+    <label>Taxa de Lucro de Mercado (%):</label>
+    <input type="range" id="marketProfitRate" min="1" max="80" value="20">
+    <span id="marketProfitRateDisplay">20%</span>
+  </div>
 
-<div class="control-group">
-  <label>Oferta (quantidade):</label>
-  <input type="number" id="supply" value="200" readonly>
-</div>
+  <div class="control-group">
+    <label>Oferta (quantidade):</label>
+    <input type="number" id="supply" value="200" readonly>
+  </div>
 
-<div class="control-group">
-  <label>Velocidade do Ajuste:</label>
-  <input type="range" id="speedControl" min="0.5" max="2" value="0.5" step="0.1">
-  <span id="speedDisplay">Lento</span>
-</div>
+  <div class="control-group">
+    <label>Velocidade do Ajuste:</label>
+    <input type="range" id="speedControl" min="0.5" max="2" value="0.5" step="0.1">
+    <span id="speedDisplay">Lento</span>
+  </div>
 
-<p><b>Preço Natural:</b> R$ <span id="naturalPrice">0</span></p>
-<p><b>Preço de Mercado:</b> R$ <span id="marketPrice">0</span></p>
-<p class="small">Choque ao mover demanda/lucro → depois gravitação suave até o equilíbrio.</p>
+  <p><b>Preço Natural:</b> R$ <span id="naturalPrice">0</span></p>
+  <p><b>Preço de Mercado:</b> R$ <span id="marketPrice">0</span></p>
+  <p class="small">Choque ao mover demanda/lucro → depois gravitação suave até o equilíbrio.</p>
 
-<canvas id="chart" width="900" height="360"></canvas>
+  <canvas id="chart" width="900" height="360"></canvas>
 </div>
 
 <script>
@@ -146,14 +171,12 @@ let cost = 10, avgProfitRate = 0.20, demand = 200, marketProfitRate = 0.20, supp
 let lastUserMarketProfitRate = marketProfitRate;
 let lastUserDemand = demand;
 
-// PARÂMETROS BASE
 const IMMEDIATE_LIMIT = 0.9;
 const BASE_SUPPLY_SPEED = 0.05;
 const BASE_K_SUPPLY_DEVIATION = 0.02;
 const BASE_K_DELTA_SUPPLY = 0.5;
 const BASE_K_PULL_TO_NORMAL = 0.01;
 
-// NOVO
 let speedFactor = 0.5;
 
 function updateSpeedLabel(val) {
@@ -170,15 +193,49 @@ const chart = new Chart(ctx, {
   data: {
     labels: Array.from({ length: 501 }, (_, i) => i),
     datasets: [
-      { label: "Demanda", data: [{ x:demand, y:0 }, { x:demand, y:0 }], borderWidth: 2, borderDash: [6,4], pointRadius: 0 },
-      { label: "Preço Natural", data: Array(501).fill(0), borderWidth: 2, pointRadius: 0 },
-      { label: "Preço de Mercado", data: Array(501).fill(null), borderWidth: 0, pointRadius: 8 },
-      { label: "Oferta", data: [{ x:supply, y:0 }, { x:supply, y:0 }], borderWidth: 2, borderDash: [6,4], pointRadius: 0 }
+      {
+        label: "Demanda",
+        data: [{ x: demand, y: 0 }, { x: demand, y: 0 }],
+        borderColor: '#22d3ee',
+        borderDash: [6, 4],
+        borderWidth: 2,
+        pointRadius: 0
+      },
+      {
+        label: "Preço Natural",
+        data: Array(501).fill(0),
+        borderColor: '#94a3b8',
+        borderWidth: 2,
+        pointRadius: 0
+      },
+      {
+        label: "Preço de Mercado",
+        data: [{ x: supply, y: marketPrice(cost, marketProfitRate) }],
+        borderColor: '#38bdf8',
+        backgroundColor: '#38bdf8',
+        pointRadius: 7,
+        pointHoverRadius: 9,
+        showLine: false
+      },
+      {
+        label: "Oferta",
+        data: [{ x: supply, y: 0 }, { x: supply, y: 0 }],
+        borderColor: '#16a34a',
+        borderDash: [6, 4],
+        borderWidth: 2,
+        pointRadius: 0
+      }
     ]
   },
   options: {
     animation: false,
-    scales: { x:{ type:'linear', min:0, max:500 }, y:{ min:0 } }
+    scales: {
+      x: { type: 'linear', min: 0, max: 500, title: { display: true, text: 'Quantidade' } },
+      y: { min: 0, title: { display: true, text: 'Preço' } }
+    },
+    plugins: {
+      legend: { labels: { color: '#e2e8f0' } }
+    }
   }
 });
 
@@ -195,16 +252,14 @@ function update() {
   let newDemand = parseFloat(document.getElementById('demand').value);
   const userMarketProfitRate = parseFloat(document.getElementById('marketProfitRate').value)/100;
 
-  // *** Ajuste do choque de demanda escalado pelo speedFactor ***
   if (newDemand !== lastUserDemand) {
     const baseDemandShock = 0.05;
-    const shock = baseDemandShock * Math.max(0.05, speedFactor); // nunca zero
+    const shock = baseDemandShock * Math.max(0.05, speedFactor);
     marketProfitRate += (newDemand > lastUserDemand ? shock : -shock);
     lastUserDemand = newDemand;
   }
   demand = newDemand;
 
-  // Choque de lucro (slider manual)
   const userChanged = Math.abs(userMarketProfitRate - lastUserMarketProfitRate) > 1e-6;
   if (userChanged) {
     let profitDiff = (userMarketProfitRate - avgProfitRate) / avgProfitRate;
@@ -215,8 +270,6 @@ function update() {
     marketProfitRate = userMarketProfitRate;
   }
 
-  // /// GRAVITAÇÃO ESCALADA PELA VELOCIDADE ///
-  // Escala quadrática: respostas bem mais lentas em baixas velocidades
   const GRADUAL_SUPPLY_SPEED = BASE_SUPPLY_SPEED * speedFactor;
   const K_SUPPLY_DEVIATION = BASE_K_SUPPLY_DEVIATION * Math.pow(speedFactor, 2);
   const K_DELTA_SUPPLY = BASE_K_DELTA_SUPPLY * Math.pow(speedFactor, 2);
@@ -234,18 +287,14 @@ function update() {
   force += -K_DELTA_SUPPLY * deltaNorm;
   force += K_PULL_TO_NORMAL * (avgProfitRate - marketProfitRate);
 
-  // Aplica força gravitacional sobre a taxa de lucro
   marketProfitRate += force;
 
-  // Amortecimento adicional para evitar oscilações em velocidades lentas
   const damping = 0.98 + (1 - speedFactor) * 0.015;
   marketProfitRate = marketProfitRate * damping + (1 - damping) * avgProfitRate;
 
-  // Limites de segurança
   marketProfitRate = Math.max(0.0001, marketProfitRate);
   marketProfitRate = Math.min(2.0, marketProfitRate);
 
-  // Atualiza interface
   document.getElementById('marketProfitRate').value = (marketProfitRate*100).toFixed(0);
   document.getElementById('supply').value = supply.toFixed(2);
 
@@ -256,21 +305,13 @@ function update() {
   document.getElementById('marketPrice').textContent = mP.toFixed(2);
   syncDisplays();
 
-  // Atualiza gráfico
   chart.data.datasets[0].data = [{ x:demand, y:0 }, { x:demand, y:mP*3 }];
   chart.data.datasets[1].data = Array(501).fill(nP);
-  chart.data.datasets[2].data = Array(501).fill(null);
-  chart.data.datasets[2].data[Math.round(Math.min(500, Math.max(0, supply)))] = mP;
+  chart.data.datasets[2].data = [{ x: supply, y: mP }];
   chart.data.datasets[3].data = [{ x:supply, y:0 }, { x:supply, y:mP*3 }];
-  
-  if (mP < nP) {
-	chart.options.scales.y.min = (nP-mP)*0.8;
-	chart.options.scales.y.max = nP*1.2;
- }
-  else {
-  chart.options.scales.y.min = (mP-nP)*0.8;
-	chart.options.scales.y.max = mP*1.2;
-  }
+
+  chart.options.scales.y.min = 0;
+  chart.options.scales.y.max = Math.max(nP, mP) * 1.2;
 
   chart.update();
   requestAnimationFrame(update);
@@ -286,7 +327,6 @@ document.getElementById('avgProfitRate').addEventListener('input', syncDisplays)
 document.getElementById('demand').addEventListener('input', syncDisplays);
 document.getElementById('marketProfitRate').addEventListener('input', syncDisplays);
 </script>
-
 
 </body>
 </html>
