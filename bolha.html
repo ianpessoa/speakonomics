@@ -109,12 +109,24 @@
   }
 
   canvas {
-    width: 100% !important;
-  height: 60vh !important;
-  max-height: 580px;
-  border-radius: 10px;
+    border-radius: 10px;
     background: #0f172a; /* Fundo escuro para o gráfico */
     box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
+  }
+
+  canvas.chart {
+    max-height: 300px !important;
+  }
+
+  .chart-card {
+  flex: 1 1 450px;   /* antes 540px */
+  min-width: 280px;  /* antes 320px */
+  min-height: 300px; /* antes 400px */
+  padding: 12px;     /* antes 14px */
+}
+
+  canvas.particles {
+    max-width: 100% !important;
   }
 
   .info {
@@ -196,7 +208,7 @@
 </style>
 </head>
 <body>
-<canvas id="particles"></canvas>
+<canvas id="particles" class="particles"></canvas>
 <div class="wrap">
   <a href="index.html" class="back">← Voltar ao início</a>
   <h1>Simulador — Bolha de Ativos</h1>
@@ -227,7 +239,7 @@
 
   <div id="charts">
     <div class="chart-card">
-      <canvas id="priceChart"></canvas>
+      <canvas class="chart" id="priceChart"></canvas>
       <div class="info">
         <div class="badge">Preço: <span id="priceBadge">-</span></div>
         <div class="badge">Fundamental: <span id="fundBadge">-</span></div>
@@ -236,7 +248,7 @@
     </div>
 
     <div class="chart-card">
-      <canvas id="expChart"></canvas>
+      <canvas class="chart" id="expChart"></canvas>
       <div class="info">
         <div class="badge">Expectativas: <span id="expBadge">-</span></div>
       </div>
