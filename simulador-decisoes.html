@@ -137,11 +137,23 @@
     canvas {
       display: block;
       margin: 0 auto;
-      max-width: 100%;
       background: #0f172a;
       border-radius: 15px;
       box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
     }
+
+        canvas.particles {
+      width:100%;
+      height:100%;
+      }
+
+    canvas.chart {
+  flex: 1 1 450px;   /* antes 540px */
+  min-width: 280px;  /* antes 320px */
+  min-height: 300px; /* antes 400px */
+  padding: 12px;     /* antes 14px */
+}
+
 
     /* Estilo do botão Voltar */
     a.back {
