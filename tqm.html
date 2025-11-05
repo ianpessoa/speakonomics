@@ -39,12 +39,12 @@
     align-items: center;
   }
 
-  .container {
-    max-width: 800px;
+ .container {
+    max-width: 700px; /* ↓ reduz um pouco a largura também */
     margin: auto;
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(8px);
-    padding: 30px;
+    padding: 25px;
     border-radius: 15px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
@@ -69,13 +69,12 @@
     color: #38bdf8;
   }
 
-  canvas {
+    canvas {
     margin-top: 20px;
     background: #0f172a;
     border-radius: 15px;
     box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
-    /* Ajuste para o gráfico ser menor e responsivo */
-    max-height: 900px; 
+    max-height: 450px; /* ↓ diminui a altura máxima do gráfico */
     width: 100% !important;
   }
 
@@ -152,7 +151,7 @@
 
     <div id="priceLabel"><b>Nível de Preços:</b> <span id="nivelPreco">10.00</span></div>
 
-    <canvas id="chart" height="350"></canvas>
+    <canvas id="chart" height="200"></canvas>
 
   </div>
 </div>
