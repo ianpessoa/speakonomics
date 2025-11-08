@@ -1,0 +1,998 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Feira de Bananas — Layout com Gráfico</title>
+<style>
+
+#controls button:disabled {
+  background: #555;
+  color: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Indie+Flower&display=swap');
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    font-family: 'Indie Flower', cursive;
+    padding: 20px;
+  }
+
+  /* contêiner principal dos dois canvases */
+  #canvas-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  canvas {
+    background: #1a1a1a;
+    border: 2px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  }
+
+  #feiraCanvas {
+    width: 800px;
+    height: 400px;
+  }
+
+  /* espaço reservado para o gráfico */
+  #graphCanvas {
+    width: 400px;
+    height: 400px;
+    background: #1a1a1a;
+    border: 2px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #controls {
+    margin-top: 30px;
+    background: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    padding: 16px 24px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  #controls label {
+    color: #ccc;
+    font-weight: 500;
+    font-family: 'Indie Flower', cursive;
+  }
+
+  #controls input {
+    width: 100px;
+    padding: 10px 12px;
+    border: 1px solid #555;
+    border-radius: 6px;
+    font-size: 16px;
+    text-align: center;
+    background: #333;
+    color: #e8e8e8;
+    font-family: 'Indie Flower', cursive;
+  }
+
+  #controls input::placeholder {
+    color: #777;
+  }
+
+  #controls input:focus {
+    outline: none;
+    border-color: #4caf50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+  }
+
+  #controls button {
+    background: #4caf50;
+    border: none;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  #controls button:hover {
+    background: #45a049;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+  }
+
+  #controls button:active {
+    transform: scale(0.98);
+  }
+
+  #result {
+    margin-top: 24px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #b0b0b0;
+    opacity: 0;
+    transition: opacity 1s ease;
+    text-align: center;
+    white-space: pre-line;
+    max-width: 600px;
+    font-family: 'Indie Flower', cursive;
+  }
+
+  #result.visible {
+    opacity: 1;
+  }
+
+  /* Responsividade */
+  @media (max-width: 1024px) {
+    #canvas-container {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #feiraCanvas {
+      width: 100%;
+      max-width: 600px;
+      height: 300px;
+    }
+
+    #graphCanvas {
+      width: 100%;
+      max-width: 600px;
+      height: 300px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    #controls {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #controls input {
+      width: 100%;
+    }
+
+    #controls button {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="canvas-container">
+  <canvas id="feiraCanvas" width="800" height="400"></canvas>
+  <div id="graphCanvas"></div>
+</div>
+
+<div id="controls">
+  <label for="price">Preço (R$):</label>
+  <input id="price" type="number" step="0.1" placeholder="0.00" />
+  <button id="announce">Anunciar</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+/* --- configuração e canvases --- */
+let equilibriumReached = false;
+let floatPairs = []; // pares consumidores-feirantes
+const canvas = document.getElementById('feiraCanvas');
+const ctx = canvas.getContext('2d');
+const graphCanvas = document.createElement('canvas');
+graphCanvas.width = 400;
+graphCanvas.height = 400;
+document.getElementById('graphCanvas').replaceChildren(graphCanvas);
+const gctx = graphCanvas.getContext('2d');
+
+const W = canvas.width, H = canvas.height;
+const resultText = document.getElementById('result');
+
+/* --- mouse (para o leiloeiro) --- */
+let mouse = {x: 0, y: 0, active: false};
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = e.clientX - rect.left;
+  mouse.y = e.clientY - rect.top;
+  mouse.active = true;
+});
+canvas.addEventListener('mouseleave', () => mouse.active = false);
+
+/* --- personagens --- */
+const characters = [
+  {src:'consumidor1.png', x:140, y:260, w:88, h:132},
+  {src:'consumidor2.png', x:200, y:260, w:88, h:132},
+  {src:'consumidor3.png', x:260, y:260, w:88, h:132},
+  {src:'feirante1.png',   x:540, y:260, w:88, h:132},
+  {src:'feirante2.png',   x:600, y:260, w:88, h:132},
+  {src:'feirante3.png',   x:660, y:260, w:88, h:132},
+  {src:'leiloeiro.png',   x:400, y:220, w:165, h:165}
+];
+
+/* --- Novas funções: parametrização escolhida para P* ≈ 3 --- 
+   A = sum a_i = 21, D = sum d_i = 6, B + C = 9 -> P* = (A+D)/(B+C) = 3
+*/
+const demandParams = [
+  {a:9, b:2},   // consumidor1
+  {a:7, b:1.5}, // consumidor2
+  {a:5, b:1}    // consumidor3
+];
+const supplyParams = [
+  {c:1.5, d:2}, // feirante1
+  {c:1.2, d:1.5},// feirante2
+  {c:1.8, d:3}  // feirante3
+];
+
+// funções de reação
+const demand = (i,p) => Math.max(0, demandParams[i].a - demandParams[i].b * p);
+const supply = (i,p) => Math.max(0, supplyParams[i].c * p - supplyParams[i].d);
+
+/* --- estado e animações --- */
+let speechBubble={text:'',visible:false,scale:1,opacity:1};
+let leiloeiroAnim={jumping:false,jumpTime:0,facingLeft:false};
+let consumerBubbles=[{visible:false,text:""},{visible:false,text:""},{visible:false,text:""}];
+let producerBubbles=[{visible:false,text:""},{visible:false,text:""},{visible:false,text:""}];
+let demandPoints=[], supplyPoints=[]; // arrays persistentes de observações
+
+/* --- carregar imagens --- */
+let loaded=0;
+characters.forEach(ch=>{
+  const img=new Image();
+  img.src=ch.src;
+  img.onload=()=>{
+    ch.img=img;
+    ch.phase=Math.random()*Math.PI*2;
+    ch.currentX=ch.x; ch.currentY=ch.y; ch.currentScale=1;
+    ch.floatSpeed=0.5+Math.random()*0.3; ch.floatAmplitude=2+Math.random()*2;
+    ch.talking=false; ch.talkTime=0;
+    if(++loaded===characters.length) animate();
+  };
+});
+
+/* --- desenho da feira --- */
+function drawGround(){ 
+  ctx.fillStyle='#2a2a2a'; 
+  ctx.fillRect(0,H-60,W,60); 
+}
+
+function drawTitle(){ 
+  ctx.fillStyle='#e8e8e8'; 
+  ctx.font='bold 28px "Indie Flower", cursive'; 
+  ctx.textAlign='center'; 
+  ctx.fillText('Feira de Bananas — Excesso de Demanda',W/2,40); 
+}
+
+function drawCharacter(ch){
+  const w=ch.w*ch.currentScale, h=ch.h*ch.currentScale;
+  ctx.save();
+  if(ch===characters[6] && leiloeiroAnim.facingLeft){
+    ctx.translate(ch.currentX, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(ch.img, -w/2, ch.currentY - h, w, h);
+  } else {
+    ctx.drawImage(ch.img, ch.currentX - w/2, ch.currentY - h, w, h);
+  }
+  ctx.restore();
+}
+
+function drawSpeechBubble(ch, text, opacity=1){
+  const bubbleW=90, bubbleH=45, offsetX=55, offsetY=20;
+  const bubbleX = ch.currentX - bubbleW/2 + offsetX;
+  const bubbleY = ch.currentY - ch.h*ch.currentScale - 60 + offsetY;
+  ctx.globalAlpha = opacity;
+  ctx.fillStyle = "#2a2a2a"; ctx.strokeStyle = "#d4d4d4"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(bubbleX,bubbleY,bubbleW,bubbleH,10); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); const lx=bubbleX+18, ly=bubbleY+bubbleH;
+  ctx.moveTo(lx,ly); ctx.lineTo(lx-10,ly+10); ctx.lineTo(lx+5,ly); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle="#f5f5dc"; ctx.font="25px 'Indie Flower', cursive"; ctx.textAlign="center";
+  ctx.fillText(text, bubbleX + bubbleW/2, bubbleY + bubbleH/1.7);
+  ctx.globalAlpha = 1;
+}
+
+function drawLabels(){ 
+  ctx.font="25px 'Indie Flower', cursive"
+  ctx.textAlign="center"; 
+  ctx.fillStyle="rgba(100, 200, 100, 0.4)"; 
+  ctx.fillText("Consumidores",200,360); 
+  ctx.fillStyle="rgba(200, 100, 100, 0.4)"; 
+  ctx.fillText("Produtores",600,360); 
+}
+
+// Desenhar animações de giz
+function drawChalkParticles(time) {
+  const particleCount = 20;
+  for (let i = 0; i < particleCount; i++) {
+    const x = (W / particleCount) * i + Math.sin(time * 0.3 + i) * 30;
+    const y = H * 0.2 + Math.cos(time * 0.25 + i * 0.3) * 40 + Math.sin(time * 0.15 + i) * 20;
+
+    // Traços de giz
+    ctx.globalAlpha = 0.25 + Math.sin(time * 0.4 + i) * 0.15;
+    ctx.strokeStyle = "#d4d4d4";
+    ctx.lineWidth = 3 + Math.sin(time * 0.3 + i) * 1.5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(x - 20, y);
+    ctx.lineTo(x + 20, y);
+    ctx.stroke();
+
+    // Pó de giz
+    ctx.globalAlpha = 0.15 + Math.cos(time * 0.5 + i) * 0.1;
+    ctx.fillStyle = "#e8e8e8";
+    for (let j = 0; j < 3; j++) {
+      const px = x + (Math.random() - 0.5) * 40;
+      const py = y + (Math.random() - 0.5) * 15;
+      const radius = 0.8 + Math.sin(time * 0.2 + i + j) * 0.5;
+      ctx.beginPath();
+      ctx.arc(px, py, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Pontos de giz
+    ctx.globalAlpha = 0.3 + Math.cos(time * 0.6 + i) * 0.15;
+    ctx.fillStyle = "#f5f5f5";
+    ctx.beginPath();
+    ctx.arc(x, y + 12, 2 + Math.sin(time * 0.25 + i) * 1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ---------- MOVIMENTO / FALA CONTROLADA ----------
+
+// Parâmetros de movimento ao falar
+const TALK_FLOAT = 18;      // quantos pixels sobem ao falar
+const TALK_SCALE = 1.10;    // escala enquanto fala
+const TALK_RETURN_SMOOTH = 0.12; // suavidade retorno
+
+// Inicializar targets para cada personagem (já temos characters, então adiciona)
+characters.forEach(ch => {
+  ch.targetY = ch.y;
+  ch.targetScale = 1;
+  ch.speakingTimeout = null;
+});
+
+// Inicia fala com movimento (index: índice em characters; duration em ms)
+function startCharacterSpeak(index, duration = 800) {
+  const ch = characters[index];
+  // garante cleanup de fala anterior
+  if (ch.speakingTimeout) { clearTimeout(ch.speakingTimeout); ch.speakingTimeout = null; }
+  // marcar falando
+  ch.talking = true;
+  ch.talkTime = 0;
+  // definir targets
+  ch.targetY = ch.y - TALK_FLOAT;
+  ch.targetScale = TALK_SCALE;
+
+  // quando terminar, voltar
+  ch.speakingTimeout = setTimeout(() => {
+    ch.talking = false;
+    ch.targetY = ch.y;
+    ch.targetScale = 1;
+    ch.speakingTimeout = null;
+  }, duration);
+}
+
+// Leiloeiro: offsets atenciosos (suavizados)
+leiloeiroAnim.attentiveOffsetX = 0;
+leiloeiroAnim.attentiveOffsetY = 0;
+leiloeiroAnim.attentiveTargetX = 0;
+leiloeiroAnim.attentiveTargetY = 0;
+
+// faz o leiloeiro "inclinar" pra esquerda e pra baixo
+function leiloeiroLeanLeft() {
+  leiloeiroAnim.attentiveTargetX = -18; // desloca pra esquerda
+  leiloeiroAnim.attentiveTargetY = 12;  // desloca pra baixo
+}
+// faz o leiloeiro "inclinar" pra direita e pra baixo
+function leiloeiroLeanRight() {
+  leiloeiroAnim.attentiveTargetX = 18;
+  leiloeiroAnim.attentiveTargetY = 12;
+}
+// reseta a inclinação (volta ao flutuar normal)
+function leiloeiroResetLean() {
+  leiloeiroAnim.attentiveTargetX = 0;
+  leiloeiroAnim.attentiveTargetY = 0;
+}
+
+/* --- loop principal da feira --- */
+function animate() {
+  // Fundo de quadro negro
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Textura de quadro
+  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+  for (let i = 0; i < 100; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    ctx.fillRect(x, y, Math.random() * 3, Math.random() * 1);
+  }
+
+  const t = performance.now() / 1000;
+  const leiloeiro = characters[6];
+
+  drawGround();
+  drawTitle();
+
+  // --- FLOAT + INTERAÇÃO DO MOUSE ---
+  const floatY = Math.sin(t * leiloeiro.floatSpeed + leiloeiro.phase) * leiloeiro.floatAmplitude;
+  let offsetX = 0, offsetY = 0, scaleTarget = 1;
+
+  const dx = mouse.x - leiloeiro.x;
+  const dy = mouse.y - (leiloeiro.y - leiloeiro.h / 2);
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  if (mouse.active && dist < 120) {
+    const f = (120 - dist) / 120;
+    offsetX = dx * f * 0.3;
+    offsetY = dy * f * 0.2;
+    scaleTarget = 1 + f * 0.15;
+  }
+
+  // --- SUAVIZAÇÃO DOS OFFSETS ATENTOS (quando ele olha pros outros personagens) ---
+  leiloeiroAnim.attentiveOffsetX += (leiloeiroAnim.attentiveTargetX - leiloeiroAnim.attentiveOffsetX) * 0.12;
+  leiloeiroAnim.attentiveOffsetY += (leiloeiroAnim.attentiveTargetY - leiloeiroAnim.attentiveOffsetY) * 0.12;
+
+  // soma o deslocamento “atento” aos offsets normais
+  offsetX += leiloeiroAnim.attentiveOffsetX;
+  offsetY += leiloeiroAnim.attentiveOffsetY;
+
+  // --- PULO ---
+  if (leiloeiroAnim.jumping) {
+    leiloeiroAnim.jumpTime += 0.1;
+    const jumpHeight = Math.sin(leiloeiroAnim.jumpTime) * 20;
+    leiloeiro.currentY = leiloeiro.y - Math.max(0, jumpHeight);
+    if (leiloeiroAnim.jumpTime >= Math.PI) {
+      leiloeiroAnim.jumping = false;
+      leiloeiro.currentY = leiloeiro.y;
+    }
+  }
+
+// --- ANIMAÇÃO PÓS-EQUILÍBRIO ---
+if (equilibriumReached) {
+  for (const pair of floatPairs) {
+    const { consumer, seller } = pair;
+
+    // Direção e distância
+    const dx = seller.currentX - consumer.currentX;
+    const dy = seller.currentY - consumer.currentY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dirX = dx / dist;
+    const dirY = dy / dist;
+
+    // Oscilação senoidal (faz eles "dançarem")
+    const t = performance.now() / 1000;
+    const oscillation = Math.sin(t * 2 + pair.phaseOffset) * 0.4;
+    const randomAngle = pair.angle + oscillation;
+    const angleOffsetX = Math.cos(randomAngle) * 0.5;
+    const angleOffsetY = Math.sin(randomAngle) * 0.5;
+
+    // Se estiver longe, aproxima; se estiver muito perto, afasta um pouco
+    let force = 0.015; // força de atração
+    const delta = dist - pair.distanceTarget;
+    if (delta < 0) force = -0.01; // se muito próximo, inverte direção levemente
+
+    // Atualiza posição do consumidor
+    consumer.currentX += (dirX * force * Math.abs(delta)) + angleOffsetX;
+    consumer.currentY += (dirY * force * Math.abs(delta)) + angleOffsetY;
+
+    // Pequenas variações para o movimento parecer natural
+    pair.angle += pair.baseSpeed * (0.8 + Math.random() * 0.4);
+  }
+}
+
+  // --- ATUALIZAÇÃO DE TODOS OS PERSONAGENS ---
+  for (const ch of characters) {
+    const fY = Math.sin(t * ch.floatSpeed + ch.phase) * ch.floatAmplitude;
+    let gestureScale = 0;
+
+    // gesto de fala (leve pulsar)
+    if (ch.talking) {
+      ch.talkTime += 0.2;
+      gestureScale = Math.sin(ch.talkTime * 3) * 0.05;
+    }
+
+    ch.currentScale += ((1 + gestureScale) - ch.currentScale) * 0.1;
+
+    if (ch !== leiloeiro) {
+      ch.currentY += (ch.y + fY - ch.currentY) * 0.1;
+    } else {
+      // aplica suavemente offsets, flutuação e escala do leiloeiro
+      ch.currentX += (ch.x + offsetX - ch.currentX) * 0.1;
+      ch.currentY += (ch.y + floatY + offsetY - ch.currentY) * 0.1;
+      ch.currentScale += (scaleTarget - ch.currentScale) * 0.05;
+    }
+
+    drawCharacter(ch);
+  }
+
+  // --- BALÕES DE FALA ---
+  if (speechBubble.visible && speechBubble.text)
+    drawSpeechBubble(leiloeiro, speechBubble.text, speechBubble.opacity);
+
+  for (let i = 0; i < 3; i++) {
+    if (consumerBubbles[i].visible)
+      drawSpeechBubble(characters[i], consumerBubbles[i].text, 1);
+  }
+
+  for (let i = 0; i < 3; i++) {
+    if (producerBubbles[i].visible)
+      drawSpeechBubble(characters[i + 3], producerBubbles[i].text, 1);
+  }
+
+  drawLabels();
+  drawChalkParticles(t);
+
+  // --- BRILHO DE GIZ OCASIONAL ---
+  const glowIntensity = Math.sin(t * 0.8) * 0.1 + 0.1;
+  ctx.globalAlpha = glowIntensity;
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(W / 2, H / 2, 150 + Math.sin(t * 0.5) * 30, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // --- LOOP ---
+  requestAnimationFrame(animate);
+}
+
+function startFloatingTogether() {
+  equilibriumReached = true;
+  document.getElementById('announce').disabled = true; // desativa botão
+
+  const consumers = characters.slice(0, 3);
+  const sellers = characters.slice(3, 6);
+
+  floatPairs = consumers.map((c, i) => ({
+    consumer: c,
+    seller: sellers[i % sellers.length],
+    angle: Math.random() * Math.PI * 2,
+    baseSpeed: 0.02 + Math.random() * 0.02,
+    distanceTarget: 80 + Math.random() * 40, // distância ideal da “dança”
+    phaseOffset: Math.random() * Math.PI * 2
+  }));
+}
+
+
+/* -------------------------- GRÁFICO -------------------------- */
+/* Escalas: eixo Y = preço 0..5 ; eixo X = quantidade (visual 0..~11) */
+const mapX = q => 40 + (q * 30);                 // quantidade -> x
+const mapY = p => 360 - (p * (320/5));          // preço 0..5 -> y (40..360)
+
+function drawGraphFrame(){
+  gctx.fillStyle="#1a1a1a"; gctx.fillRect(0,0,400,400);
+  // eixos
+  gctx.strokeStyle="#d4d4d4"; gctx.lineWidth=2;
+  gctx.beginPath(); gctx.moveTo(40,360); gctx.lineTo(380,360); gctx.moveTo(40,360); gctx.lineTo(40,40); gctx.stroke();
+  // rótulos
+  gctx.font="14px 'Indie Flower', cursive"; gctx.fillStyle="#f5f5dc"; gctx.textAlign="center";
+  gctx.fillText("Quantidade", 210, 380);
+  gctx.save(); gctx.translate(15,200); gctx.rotate(-Math.PI/2); gctx.fillText("Preço", 0,0); gctx.restore();
+  // marcações do eixo Y (0..5)
+  gctx.textAlign="right"; gctx.fillStyle="#d4d4d4"; gctx.font="12px 'Indie Flower', cursive";
+  for(let p=0;p<=5;p++){
+    const y = mapY(p);
+    gctx.fillText(p.toFixed(0), 35, y + 4);
+  }
+}
+
+/* Atualização incremental (não redesenha todo o histórico de forma brusca)
+   - anteriores suavemente enfraquecem;
+   - último ponto ganha destaque;
+   - inferência (curvas) é revelada left->right.
+*/
+function updateGraph() {
+  // preparar metas para suavização
+  demandPoints.forEach(pt => { pt.rTarget = 3; pt.alphaTarget = 0.4; });
+  supplyPoints.forEach(pt => { pt.rTarget = 3; pt.alphaTarget = 0.4; });
+
+  if(demandPoints.length){
+    const dlast = demandPoints[demandPoints.length - 1];
+    dlast.rTarget = 7; dlast.alphaTarget = 1;
+  }
+  if(supplyPoints.length){
+    const slast = supplyPoints[supplyPoints.length - 1];
+    slast.rTarget = 7; slast.alphaTarget = 1;
+  }
+
+  const start = performance.now();
+  const duration = 600; // ms for the transition
+  const hasInference = demandPoints.length > 4;
+
+  function frame(t){
+    const progress = Math.min((t - start) / duration, 1);
+    // limpar parcialmente (mantemos pontos via propriedades internas para suavizar)
+    drawGraphFrame();
+
+    // desenha pontos atuais com suas propriedades animadas (r, alpha)
+    for(const p of [...demandPoints, ...supplyPoints]){
+      p.r = p.r ?? 0; p.alpha = p.alpha ?? 0;
+      // suaviza para as metas (peso fixo para suavidade)
+      p.r += (p.rTarget - p.r) * 0.12;
+      p.alpha += (p.alphaTarget - p.alpha) * 0.12;
+      gctx.beginPath();
+      gctx.arc(mapX(p.qty), mapY(p.price), Math.max(0.5, p.r), 0, 2*Math.PI);
+      gctx.fillStyle = p.type === "d" ? `rgba(100,200,100,${p.alpha})` : `rgba(200,100,100,${p.alpha})`;
+      gctx.fill();
+    }
+
+    // inferência: desenhar linhas suavemente, revelando da esquerda pra direita
+    if(hasInference){
+      const sortedD = [...demandPoints].sort((a,b)=>a.qty-b.qty);
+      const sortedS = [...supplyPoints].sort((a,b)=>a.qty-b.qty);
+      // comprimento a revelar [40..380]
+      const revealX = 40 + (340 * progress);
+
+      // clip para efeito left->right
+      gctx.save();
+      gctx.beginPath(); gctx.rect(40, 0, revealX - 40, 400); gctx.clip();
+
+      // demanda (verde claro)
+      gctx.strokeStyle = "rgba(100,200,100,0.28)";
+      gctx.lineWidth = 2;
+      gctx.beginPath();
+      sortedD.forEach((pt,i) => {
+        const x = mapX(pt.qty), y = mapY(pt.price);
+        if(i === 0) gctx.moveTo(x,y); else gctx.lineTo(x,y);
+      });
+      gctx.stroke();
+
+      // oferta (vermelho claro)
+      gctx.strokeStyle = "rgba(200,100,100,0.28)";
+      gctx.beginPath();
+      sortedS.forEach((pt,i) => {
+        const x = mapX(pt.qty), y = mapY(pt.price);
+        if(i === 0) gctx.moveTo(x,y); else gctx.lineTo(x,y);
+      });
+      gctx.stroke();
+
+      gctx.restore();
+    }
+
+    if(progress < 1) requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+}
+
+/* --- lógica principal do leiloeiro --- */
+function leiloeiroAction(price){
+  // reforçar faixa [0,5]
+  if(price < 0) price = 0;
+  if(price > 5) price = 5;
+
+  resultText.classList.remove("visible");
+  resultText.innerText = "";
+
+  const leiloeiro = characters[6];
+  leiloeiroAnim.jumping = true; leiloeiroAnim.jumpTime = 0;
+  playJumpSound();
+  setTimeout(()=>leiloeiroAnim.facingLeft = true, 200);
+  playTurnSound();
+  setTimeout(()=>leiloeiroAnim.facingLeft = false, 600);
+  playTurnSound();
+  setTimeout(()=>{
+    speechBubble.text = `R$ ${price.toFixed(2)}`;
+    speechBubble.visible = true; speechBubble.opacity = 1;
+    leiloeiro.talking = true;
+    speakLeiloeiro();
+  }, 700);
+  setTimeout(()=>{
+    leiloeiro.talking = false;
+    const fadeOut = setInterval(()=>{
+      speechBubble.opacity -= 0.05;
+      if(speechBubble.opacity <= 0){ speechBubble.visible = false; clearInterval(fadeOut); }
+    }, 50);
+  }, 2700);
+
+   // consumidores (aparecem sequencialmente) — leiloeiro inclina-se à esquerda enquanto eles falam
+  setTimeout(()=>{
+    leiloeiroAnim.facingLeft = true;
+    playTurnSound();
+    leiloeiroLeanLeft(); // começa a inclinar para a esquerda
+    // intervalo aumentado para evitar atropelos
+    for(let i=0;i<3;i++){
+      setTimeout(()=>{
+        const q = demand(i, price);
+        consumerBubbles[i].text = q.toFixed(1);
+        consumerBubbles[i].visible = true;
+        // start talking move + som
+        startCharacterSpeak(i, 900);       // sobe e escala por 900ms
+        const c = characters[i];
+        speakConsumidor();                // som
+        // ao terminar dessa fala (900ms), esconder o balão
+        setTimeout(()=> consumerBubbles[i].visible = false, 900);
+      }, i * 1400); // <- intervalo aumentado (1400ms)
+    }
+    // quando todos terminarem, resetar a inclinação do leiloeiro
+    setTimeout(()=> {
+      leiloeiroResetLean();
+    }, 3 * 1400 + 200);
+  }, 3000);
+
+   // produtores (feirantes) — leiloeiro inclina-se à direita enquanto eles falam
+  setTimeout(()=>{
+    leiloeiroAnim.facingLeft = false;
+    playTurnSound();
+    leiloeiroLeanRight();
+    for(let i=0;i<3;i++){
+      setTimeout(()=>{
+        const q = supply(i, price);
+        producerBubbles[i].text = q.toFixed(1);
+        producerBubbles[i].visible = true;
+        // start talking move + som
+        startCharacterSpeak(i + 3, 900);   // indices 3..5 são feirantes
+        speakFeirante();
+        setTimeout(()=> producerBubbles[i].visible = false, 900);
+      }, i * 1400); // intervalo aumentado
+    }
+    setTimeout(()=> {
+      leiloeiroResetLean();
+    }, 3 * 1400 + 200);
+  }, 6000);
+
+  // totais, atualizar gráfico e mensagem final
+  setTimeout(()=>{
+    consumerBubbles.forEach(b=>b.visible=false);
+    producerBubbles.forEach(b=>b.visible=false);
+    const totalD = Array.from({length:3}, (_,i) => demand(i,price)).reduce((a,b)=>a+b,0);
+    const totalS = Array.from({length:3}, (_,i) => supply(i,price)).reduce((a,b)=>a+b,0);
+    const excess = totalD - totalS;
+    let message;
+    if(Math.abs(excess) < 0.1) {message = "O preço está em equilíbrio!"; 
+leiloeiroMartela();
+ setTimeout(() => {
+    startFloatingTogether();
+  }, 500);
+}
+    else if(excess > 0) message = "Há excesso de demanda — o preço deve subir!";
+    else message = "Há excesso de oferta — o preço deve cair!";
+    resultText.innerText = `Demanda: ${totalD.toFixed(1)} | Oferta: ${totalS.toFixed(1)} | Excesso: ${excess.toFixed(1)}\n${message}`;
+    resultText.classList.add("visible");
+
+    // adiciona observações (mantidas no tempo)
+    demandPoints.push({price: price, qty: totalD, type: "d"});
+    supplyPoints.push({price: price, qty: totalS, type: "s"});
+
+    // definir metas iniciais para suavização = propriedades por default
+    demandPoints.forEach(p => { p.rTarget = p.rTarget ?? 3; p.alphaTarget = p.alphaTarget ?? 0.4; });
+    supplyPoints.forEach(p => { p.rTarget = p.rTarget ?? 3; p.alphaTarget = p.alphaTarget ?? 0.4; });
+
+    // destacar últimos
+    if(demandPoints.length) { const ld = demandPoints[demandPoints.length -1]; ld.rTarget = 7; ld.alphaTarget = 1; }
+    if(supplyPoints.length) { const ls = supplyPoints[supplyPoints.length -1]; ls.rTarget = 7; ls.alphaTarget = 1; }
+
+    // anima transição incremental (suavizada)
+    updateGraph();
+  }, 9500);
+}
+
+/* --- eventos e inicialização --- */
+document.getElementById('announce').addEventListener('click', ()=>{
+  const p = parseFloat(document.getElementById('price').value);
+  if(isNaN(p) || p < 0 || p > 5) return alert('Digite um preço entre 0 e 5!');
+  leiloeiroAction(p);
+});
+
+drawGraphFrame();
+
+
+/* === Sons de fala estilo Undertale === */
+
+// Criar contexto de áudio
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// função base para um som "blip"
+function playBlip(frequency, duration = 0.05, volume = 0.2) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "square";
+  osc.frequency.value = frequency;
+  gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+
+// gera sequência repetida (fala rápida)
+function playVoice(frequency, rate, time = 1000) {
+  const start = audioCtx.currentTime;
+  const interval = setInterval(() => {
+    playBlip(frequency);
+    if (audioCtx.currentTime - start > time / 1000) clearInterval(interval);
+  }, rate);
+}
+
+/* --- Configurações de "voz" --- */
+const voiceProfiles = {
+  leiloeiro: { freq: 160, rate: 120 },    // grave e mais lento
+  consumidor: { freq: 400, rate: 60 },    // agudo e rápido
+  feirante: { freq: 260, rate: 100 }      // médio e intermediário
+};
+
+/* --- Integração com as falas --- */
+
+// Leiloeiro fala
+function speakLeiloeiro() {
+  playVoice(voiceProfiles.leiloeiro.freq, voiceProfiles.leiloeiro.rate, 1800);
+}
+
+// Consumidor fala
+function speakConsumidor() {
+  playVoice(voiceProfiles.consumidor.freq, voiceProfiles.consumidor.rate, 900);
+}
+
+// Feirante fala
+function speakFeirante() {
+  playVoice(voiceProfiles.feirante.freq, voiceProfiles.feirante.rate, 900);
+}
+
+// Som quando o leiloeiro muda de lado
+function playTurnSound() {
+  // use o mesmo nome do seu contexto (audioCtx no seu código)
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = "square";
+  osc.frequency.setValueAtTime(220, now);
+  // leve ataque para não estourar
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+  // pequena subida de pitch para "swoosh"
+  osc.frequency.linearRampToValueAtTime(440, now + 0.18);
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.25);
+
+  // cleanup: desconecta ao terminar
+  osc.onended = () => {
+    try { osc.disconnect(); } catch {}
+    try { gain.disconnect(); } catch {}
+  };
+}
+
+// Som quando o leiloeiro pula
+function playJumpSound() {
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(330, now);
+  // volume control com pequeno fade
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.15, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+  // pitch curve para dar "hop"
+  osc.frequency.linearRampToValueAtTime(660, now + 0.14);
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.28);
+
+  // cleanup
+  osc.onended = () => {
+    try { osc.disconnect(); } catch {}
+    try { gain.disconnect(); } catch {}
+  };
+}
+
+// Som de martelada em bits (corrigido para usar `audioCtx` e com cleanup)
+function playHammerSound() {
+  if (!window.audioCtx) {
+    window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  // Garante que o contexto está ativo (alguns browsers iniciam pausado)
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+
+  const now = audioCtx.currentTime;
+
+  // Impacto inicial (grave e seco)
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "square";
+  osc.frequency.setValueAtTime(120, now);
+  osc.frequency.exponentialRampToValueAtTime(600, now + 0.08);
+  gain.gain.setValueAtTime(1.0, now); // bem alto
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.25);
+
+  // Rebate metálico
+  const osc2 = audioCtx.createOscillator();
+  const gain2 = audioCtx.createGain();
+  osc2.type = "triangle";
+  osc2.frequency.setValueAtTime(400, now + 0.1);
+  gain2.gain.setValueAtTime(0.6, now + 0.1);
+  gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+  osc2.connect(gain2).connect(audioCtx.destination);
+  osc2.start(now + 0.1);
+  osc2.stop(now + 0.4);
+
+  // Segurança: desconecta depois
+  osc.onended = () => {
+    osc.disconnect();
+    gain.disconnect();
+  };
+  osc2.onended = () => {
+    osc2.disconnect();
+    gain2.disconnect();
+  };
+}
+
+
+function leiloeiroMartela() {
+  const leiloeiro = characters[6];
+  const normalSrc = "leiloeiro.png";
+  const hammerSrc = "leiloeiro-martelo.png";
+  const times = 3;
+  let count = 0;
+
+  function batida() {
+    if (count >= times) {
+      leiloeiro.img.src = normalSrc;
+      return;
+    }
+
+    // Troca sprite e toca som de martelo
+    leiloeiro.img.src = hammerSrc;
+    playHammerSound();
+    leiloeiroAnim.jumping = true;
+  playJumpSound();
+    leiloeiroAnim.jumpTime = 0;
+
+    // volta ao normal e repete
+    setTimeout(() => {
+      leiloeiro.img.src = normalSrc;
+      count++;
+      setTimeout(batida, 350);
+    }, 200);
+  }
+
+  batida();
+}
+
+
+</script>
+
+</body>
+</html>
+
