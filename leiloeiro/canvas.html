@@ -5,6 +5,124 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Feira de Bananas — Layout com Gráfico</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Indie+Flower&display=swap');
+
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  font-family: 'Indie Flower', cursive;
+  padding: 20px;
+}
+
+/* Contêiner principal dos canvases */
+#canvas-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* Canvas e gráfico */
+canvas, #graphCanvas {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+#feiraCanvas {
+  max-width: 800px;
+  aspect-ratio: 2 / 1; /* mantém proporção 800x400 */
+}
+
+#graphCanvas {
+  max-width: 400px;
+  aspect-ratio: 1 / 1; /* mantém proporção 400x400 */
+  background: transparent; /* transparente, igual ao body */
+}
+
+/* Controles */
+#controls {
+  margin-top: 30px;
+  background: #2a2a2a;
+  border: 2px solid #444;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  padding: 16px 24px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+#controls label {
+  color: #ccc;
+  font-weight: 500;
+}
+
+#controls input {
+  width: 100px;
+  max-width: 150px;
+  padding: 10px 12px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  font-size: 16px;
+  text-align: center;
+  background: #333;
+  color: #e8e8e8;
+}
+
+#controls input::placeholder {
+  color: #777;
+}
+
+#controls input:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+}
+
+#controls button {
+  background: #4caf50;
+  border: none;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#controls button:hover {
+  background: #45a049;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+#controls button:active {
+  transform: scale(0.98);
+}
 
 #controls button:disabled {
   background: #555;
@@ -13,174 +131,54 @@
   box-shadow: none;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Indie+Flower&display=swap');
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+/* Resultado */
+#result {
+  margin-top: 24px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #b0b0b0;
+  opacity: 0;
+  transition: opacity 1s ease;
+  text-align: center;
+  white-space: pre-line;
+  max-width: 600px;
+}
 
-  body {
-    background: #1a1a1a;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 80vh;
-    font-family: 'Indie Flower', cursive;
-    padding: 20px;
-  }
+#result.visible {
+  opacity: 1;
+}
 
-  /* contêiner principal dos dois canvases */
+/* Responsividade */
+@media (max-width: 1024px) {
   #canvas-container {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 24px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
   }
-
-  canvas {
-  background: transparent; /* sem cor própria, usa a do body */
-  border: none;            /* remove borda */
-  border-radius: 0;        /* remove cantos arredondados */
-  box-shadow: none;        /* remove sombra */
-}
-
-#feiraCanvas {
-  width: 800px;
-  height: 400px;
-  background: transparent; /* deixa o fundo igual ao body */
-}
-
-  /* espaço reservado para o gráfico */
+  #feiraCanvas {
+    max-width: 90%;
+  }
   #graphCanvas {
-    width: 400px;
-    height: 400px;
-    background: #1a1a1a;
-    border: 2px solid #444;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    max-width: 90%;
   }
+}
 
+@media (max-width: 600px) {
   #controls {
-    margin-top: 30px;
-    background: #2a2a2a;
-    border: 2px solid #444;
-    border-radius: 8px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-    padding: 16px 24px;
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px;
   }
 
-  #controls label {
-    color: #ccc;
-    font-weight: 500;
-    font-family: 'Indie Flower', cursive;
-  }
-
-  #controls input {
-    width: 100px;
-    padding: 10px 12px;
-    border: 1px solid #555;
-    border-radius: 6px;
-    font-size: 16px;
-    text-align: center;
-    background: #333;
-    color: #e8e8e8;
-    font-family: 'Indie Flower', cursive;
-  }
-
-  #controls input::placeholder {
-    color: #777;
-  }
-
-  #controls input:focus {
-    outline: none;
-    border-color: #4caf50;
-    box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
-  }
-
-  #controls button {
-    background: #4caf50;
-    border: none;
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  #controls button:hover {
-    background: #45a049;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
-  }
-
-  #controls button:active {
-    transform: scale(0.98);
+  #controls input, #controls button {
+    width: 100%;
+    max-width: none;
   }
 
   #result {
-    margin-top: 24px;
-    font-size: 18px;
-    font-weight: 600;
-    color: #b0b0b0;
-    opacity: 0;
-    transition: opacity 1s ease;
-    text-align: center;
-    white-space: pre-line;
-    max-width: 600px;
-    font-family: 'Indie Flower', cursive;
+    font-size: 16px;
+    max-width: 90%;
   }
-
-  #result.visible {
-    opacity: 1;
-  }
-
-  /* Responsividade */
-  @media (max-width: 1024px) {
-    #canvas-container {
-      flex-direction: column;
-      align-items: center;
-    }
-
-    #feiraCanvas {
-      width: 100%;
-      max-width: 600px;
-      height: 300px;
-    }
-
-    #graphCanvas {
-      width: 100%;
-      max-width: 600px;
-      height: 300px;
-    }
-  }
-
-  @media (max-width: 600px) {
-    #controls {
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    #controls input {
-      width: 100%;
-    }
-
-    #controls button {
-      width: 100%;
-    }
-  }
+}
 </style>
 </head>
 <body>
