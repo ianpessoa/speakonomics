@@ -211,18 +211,48 @@
 
   // Dados dos slides
   const slides = [
-    {
-      title: "Oferta e Demanda",
-      body: "A oferta e a demanda são conceitos fundamentais da economia. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-    },
-    {
-      title: "Lei da Demanda",
-      body: "Quando o preço de um bem aumenta, a quantidade demandada tende a diminuir. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
-    },
-    {
-      title: "Lei da Oferta",
-      body: "Quando o preço de um bem aumenta, a quantidade ofertada tende a aumentar. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
-    },
+   {
+  title: "Relembrando Oferta e Demanda",
+  body: `
+    Antes de prosseguirmos, vamos relembrar o que aprendemos sobre <b>oferta</b> e <b>demanda</b>.<br><br>
+    A <b>lei da demanda</b> afirma que, <i>quando o preço de um bem aumenta, a quantidade demandada tende a diminuir</i> — pois os consumidores passam a buscar alternativas mais baratas.<br><br>
+    Já a <b>lei da oferta</b> diz que, <i>quanto maior o preço, maior tende a ser a quantidade ofertada</i> — já que os produtores têm mais incentivo para produzir e vender.<br><br>
+    Essas duas leis formam a base da teoria de mercado: o ponto onde oferta e demanda se encontram é o <b>preço de equilíbrio</b>.
+  `
+},
+{
+  title: "O Leiloeiro Walrasiano",
+  body: `
+    Léon Walras (1834–1910) foi um dos fundadores da economia neoclássica e autor de <i>“Elementos de Economia Política Pura”</i> (1874), obra em que desenvolveu a teoria do <b>equilíbrio geral</b> — a ideia de que todos os mercados podem, em princípio, se equilibrar ao mesmo tempo.
+    Para explicar esse processo, Walras criou a parábola do <b>leiloeiro walrasiano</b>. Nela, um leiloeiro imaginário anuncia preços para todos os bens, e os agentes econômicos informam quanto desejam comprar ou vender. Se há excesso de demanda, o preço sobe; se há excesso de oferta, o preço cai.
+    Nenhuma troca acontece até que todos os mercados estejam em equilíbrio — é o chamado <i>tâtonnement</i>, um processo de “tentativas e ajustes” que simboliza o mecanismo de coordenação do mercado.
+    Essa metáfora expressa a visão de Walras de que os preços funcionam como um sistema de sinais capaz de harmonizar decisões individuais e levar a economia a um ponto de equilíbrio geral.
+  `
+}
+,
+{
+  title: "Vamos Praticar com o Leiloeiro Walrasiano!",
+  body: `
+    Agora que entendemos o conceito, vamos praticar!
+    No próximo slide, você poderá experimentar o papel do leiloeiro walrasiano que tenta equilibrar um único mercado: o mercado de bananas. Escolha os preços que o leiloeiro irá anunciar e observe, em tempo real, como os <b>consumidores</b> e <b>produtores</b> reagem. Aumente o preço quando houver excesso de demanda e diminua quando houver excesso de oferta.<br>
+    <div style="position: relative; display: inline-block;">
+      <img src="leiloeiro.png" alt="Leiloeiro Walrasiano" style="width: 280px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.2);">
+      <div style="
+        position: absolute;
+        top: 40%;
+        left: 220px;
+        transform: rotate(10deg);
+        color: #4caf50;
+        font-family: 'Caveat', cursive;
+        font-size: 1.6em;
+        white-space: nowrap;
+      ">
+        ⇦ Esse é John, o leiloeiro walrasiano!
+      </div>
+    </div>
+  `
+}
+,
     {
       title: "",
       body: ""
@@ -292,7 +322,7 @@
     const startTime = Date.now();
 
     // toca o som logo no início
-    //playEraseSound();
+    playEraseSound();
 
     return new Promise(resolve => {
       const animate = () => {
@@ -374,17 +404,18 @@
       
       if (currentSlide > 0) {
         await eraseText(titleEl);
-        await eraseText(bodyEl);
+	bodyEl.innerHTML = ''; // apenas limpa o corpo, sem apagar tag
       }
 
-      titleEl.textContent = slide.title;
-      bodyEl.textContent = slide.body;
+
+      titleEl.innerHTML = slide.title;
+      bodyEl.innerHTML = slide.body;
       titleEl.classList.add('hidden');
       bodyEl.classList.add('hidden');
 
       playWritingSound();
-      await writeText(titleEl);
-      await writeText(bodyEl);
+      await writeText(titleEl); // efeito só no título
+      bodyEl.classList.remove('hidden'); // mostra o corpo completo sem escrever letra a letra
       
       titleEl.style.opacity = '1';
       bodyEl.style.opacity = '1';
