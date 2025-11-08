@@ -526,7 +526,7 @@ function calculateMaxSlideHeight() {
     // procura iframe no HTML como string
     const iframeMatch = slide.body.match(/<iframe[\s>]/i);
     if (iframeMatch) {
-      const iframeHeight = parseInt(iframeMatch[1]) || 1000;
+      const iframeHeight = parseInt(iframeMatch[1]) || 1050;
       height = Math.max(height, iframeHeight + 40); // adiciona folga
     }
 
