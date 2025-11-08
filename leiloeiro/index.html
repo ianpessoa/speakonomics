@@ -24,24 +24,23 @@
     padding: 20px;
   }
 
-#slide-container {
-  width: 98%;
-  max-width: 98vw;
-  min-height: 650px; /* fallback */
-  background: #1a1a1a;
-  border: 3px solid #444;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3);
-  position: relative;
-  overflow: visible;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 50px;
-  padding: 20px;
-}
-
+  #slide-container {
+    width: 100%;
+    max-width: 1200px; /* desktop máximo */
+    min-height: 50vh;
+    background: #1a1a1a;
+    border: 3px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 50px;
+    padding: 20px;
+  }
 
   #slide-content {
     width: 100%;
@@ -50,7 +49,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 60px 40px;
+    padding: 5vw 4vw; /* padding relativo à tela */
     text-align: center;
     position: relative;
   }
@@ -81,21 +80,20 @@
 
   #slide-title {
     color: #f5f5dc;
-    font-size: 42px;
+    font-size: clamp(28px, 4vw, 42px); /* responsivo: mínimo 28px, máximo 42px */
     font-weight: 700;
-    margin-bottom: 30px;
+    margin-bottom: 2vh;
     min-height: 60px;
-    min-width: 800px;
-    height: 60px;
+    height: auto;
     opacity: 1;
     transition: opacity 0.3s ease-in-out;
   }
 
   #slide-body {
     color: #d4d4d4;
-    font-size: 22px;
+    font-size: clamp(16px, 2.5vw, 22px); /* responsivo */
     line-height: 1.8;
-    max-width: 800px;
+    max-width: 90%; /* evita estourar tela móvel */
     min-height: 200px;
     opacity: 1;
     transition: opacity 0.3s ease-in-out;
@@ -114,7 +112,7 @@
 
   .carousel-dots {
     position: absolute;
-    bottom: -40px;
+    bottom: 0px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -142,8 +140,8 @@
   }
 
   .carousel-arrow {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     background: rgba(212, 212, 212, 0.5);
     border: 2px solid #d4d4d4;
     border-radius: 50%;
@@ -152,7 +150,7 @@
     align-items: center;
     justify-content: center;
     color: #f5f5dc;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
     transition: all 0.3s ease;
     user-select: none;
@@ -174,17 +172,45 @@
     outline: none;
   }
 
+  /* Ajustes responsivos */
+  @media (max-width: 1024px) {
+    #slide-container {
+      min-height: 55vh;
+      padding: 3vw;
+    }
+  }
+
   @media (max-width: 768px) {
     #slide-container {
-      height: 600px;
+      min-height: 50vh;
+      padding: 5vw;
+    }
+
+    .carousel-arrow {
+      width: 35px;
+      height: 35px;
+      font-size: 16px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    #slide-container {
+      min-height: 45vh;
+      padding: 4vw;
     }
 
     #slide-title {
-      font-size: 32px;
+      font-size: clamp(22px, 6vw, 28px);
     }
 
     #slide-body {
-      font-size: 18px;
+      font-size: clamp(14px, 4vw, 18px);
+    }
+
+    .carousel-arrow {
+      width: 30px;
+      height: 30px;
+      font-size: 14px;
     }
   }
 </style>
@@ -258,7 +284,7 @@
 ,
     {
       title: "",
-      body: ""
+      body: `<iframe id="canvas-iframe" src="canvas.html"></iframe>`
     }
   ];
 
@@ -482,7 +508,7 @@ function calculateMaxSlideHeight() {
   const tempDiv = document.createElement('div');
   tempDiv.style.position = 'absolute';
   tempDiv.style.visibility = 'hidden';
-  tempDiv.style.width = 'calc(98% - 40px)'; // considera padding
+  tempDiv.style.width = 'calc(98% - 40px)';
   tempDiv.style.padding = '20px';
   tempDiv.style.fontFamily = "'Indie Flower', cursive";
   tempDiv.style.fontSize = '22px';
@@ -493,13 +519,26 @@ function calculateMaxSlideHeight() {
 
   slides.forEach(slide => {
     tempDiv.innerHTML = `<div style="font-size:42px; font-weight:700; margin-bottom:30px;">${slide.title}</div>${slide.body}`;
-    const height = tempDiv.offsetHeight;
+
+    // pega altura do conteúdo textual
+    let height = tempDiv.offsetHeight;
+
+    // procura iframe no HTML como string
+    const iframeMatch = slide.body.match(/<iframe[\s>]/i);
+    if (iframeMatch) {
+      const iframeHeight = parseInt(iframeMatch[1]) || 1000;
+      height = Math.max(height, iframeHeight + 40); // adiciona folga
+    }
+
     if (height > maxHeight) maxHeight = height;
   });
 
   document.body.removeChild(tempDiv);
-  return maxHeight + 40; // adiciona um pouco de folga
+  return maxHeight + 40; // folga extra
 }
+
+
+
 
 
 
