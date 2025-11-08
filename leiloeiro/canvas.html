@@ -42,16 +42,17 @@
   }
 
   canvas {
-    background: #1a1a1a;
-    border: 2px solid #444;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-  }
+  background: transparent; /* sem cor própria, usa a do body */
+  border: none;            /* remove borda */
+  border-radius: 0;        /* remove cantos arredondados */
+  box-shadow: none;        /* remove sombra */
+}
 
-  #feiraCanvas {
-    width: 800px;
-    height: 400px;
-  }
+#feiraCanvas {
+  width: 800px;
+  height: 400px;
+  background: transparent; /* deixa o fundo igual ao body */
+}
 
   /* espaço reservado para o gráfico */
   #graphCanvas {
@@ -273,11 +274,6 @@ characters.forEach(ch=>{
   };
 });
 
-/* --- desenho da feira --- */
-function drawGround(){ 
-  ctx.fillStyle='#2a2a2a'; 
-  ctx.fillRect(0,H-60,W,60); 
-}
 
 function drawTitle(){ 
   ctx.fillStyle='#e8e8e8'; 
@@ -425,18 +421,9 @@ function animate() {
   ctx.fillStyle = '#1a1a1a';
   ctx.fillRect(0, 0, W, H);
 
-  // Textura de quadro
-  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-  for (let i = 0; i < 100; i++) {
-    const x = Math.random() * W;
-    const y = Math.random() * H;
-    ctx.fillRect(x, y, Math.random() * 3, Math.random() * 1);
-  }
-
   const t = performance.now() / 1000;
   const leiloeiro = characters[6];
 
-  drawGround();
   drawTitle();
 
   // --- FLOAT + INTERAÇÃO DO MOUSE ---
@@ -546,17 +533,7 @@ if (equilibriumReached) {
   }
 
   drawLabels();
-  drawChalkParticles(t);
 
-  // --- BRILHO DE GIZ OCASIONAL ---
-  const glowIntensity = Math.sin(t * 0.8) * 0.1 + 0.1;
-  ctx.globalAlpha = glowIntensity;
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(W / 2, H / 2, 150 + Math.sin(t * 0.5) * 30, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
 
   // --- LOOP ---
   requestAnimationFrame(animate);
